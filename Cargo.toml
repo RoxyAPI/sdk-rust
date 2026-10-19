@@ -1,0 +1,35 @@
+[package]
+name = "roxyapi"
+version = "1.1.1"
+edition = "2024"
+rust-version = "1.88"
+description = "Astrology API SDK for Rust: Western and Vedic charts, tarot, numerology and Human Design. Async typed access to RoxyAPI insight data."
+license = "MIT"
+repository = "https://github.com/RoxyAPI/sdk-rust"
+homepage = "https://roxyapi.com/docs/sdk"
+documentation = "https://docs.rs/roxyapi"
+readme = "README.md"
+keywords = ["astrology", "tarot", "numerology", "horoscope", "roxyapi"]
+categories = ["api-bindings", "web-programming::http-client", "asynchronous"]
+include = ["/src/**", "/README.md", "/AGENTS.md", "/LICENSE", "/CITATION.cff"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dependencies]
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "query", "rustls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.53", features = ["time"] }
+httpdate = "1.0.3"
+
+[dev-dependencies]
+tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "net", "io-util", "test-util"] }
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio"] }
+actix-web = { version = "4.17", default-features = false, features = ["macros"] }
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0

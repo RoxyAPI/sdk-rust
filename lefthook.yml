@@ -1,0 +1,8 @@
+pre-commit:
+  commands:
+    verify:
+      run: ./scripts/check
+pre-push:
+  commands:
+    verify:
+      run: ./scripts/check

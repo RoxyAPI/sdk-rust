@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "RoxyAPI Rust SDK"
+abstract: "Official typed Rust SDK for RoxyAPI, covering Western astrology, Vedic astrology, forecasts, and spiritual wellness through one API key."
+authors:
+  - name: "RoxyAPI"
+url: "https://github.com/RoxyAPI/sdk-rust"
+repository-code: "https://github.com/RoxyAPI/sdk-rust"
+license: MIT
+type: software
+keywords:
+  - astrology-api
+  - vedic-astrology-api
+  - tarot-api
+  - numerology-api
+  - rust-sdk
+  - openapi

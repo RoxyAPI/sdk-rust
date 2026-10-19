@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""Regenerate SDK artifacts or check committed output without changing it."""
+import argparse
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import urllib.request
+
+root = Path(__file__).resolve().parent.parent
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--check", action="store_true")
+args = parser.parse_args()
+source = os.environ.get("ROXYAPI_SPEC_FILE")
+if source:
+    spec = json.loads(Path(source).read_text())
+elif args.check:
+    spec = json.loads((root / "specs/openapi.json").read_text())
+else:
+    with urllib.request.urlopen("https://roxyapi.com/api/v2/openapi.json", timeout=60) as response:
+        spec = json.load(response)
+with tempfile.TemporaryDirectory(prefix="roxyapi-codegen-") as temporary:
+    directory = Path(temporary)
+    spec_file = directory / "openapi.json"
+    spec_file.write_text(json.dumps(spec, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+    output = directory / "output"
+    environment = os.environ.copy()
+    environment.setdefault("CARGO_BUILD_JOBS", "2")
+    environment.setdefault("CARGO_TARGET_DIR", str(Path.home() / ".cache/roxyapi-codegen"))
+    subprocess.run([
+        "cargo", "run", "--locked", "--quiet", "--manifest-path",
+        str(root / "tools/generate/Cargo.toml"), "--", str(spec_file), str(root), str(output),
+    ], check=True, env=environment)
+    (output / "specs").mkdir()
+    shutil.copyfile(spec_file, output / "specs/openapi.json")
+    expected = {file.relative_to(output): file for file in output.rglob("*") if file.is_file()}
+    current_generated = {
+        file.relative_to(root)
+        for directory_name in ("src/generated", "tests/generated")
+        for file in (root / directory_name).rglob("*") if file.is_file()
+    }
+    differences = sorted(
+        relative for relative in expected
+        if not (root / relative).is_file() or (root / relative).read_bytes() != expected[relative].read_bytes()
+    )
+    obsolete = sorted(current_generated - expected.keys())
+    if args.check:
+        if differences or obsolete:
+            for relative in differences + obsolete:
+                print(f"Generated output differs: {relative}", file=sys.stderr)
+            sys.exit(1)
+        print("Generated output is current.")
+    else:
+        for relative in obsolete:
+            (root / relative).unlink()
+        for relative, file in expected.items():
+            destination = root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(file, destination)
