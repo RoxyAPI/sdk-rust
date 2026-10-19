@@ -597,8 +597,13 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         let accessor = identifier(group);
         source.push_str(&format!("#[derive(Debug,Clone,Copy)] pub struct {class}<'a>(&'a Core); impl crate::Roxy {{pub fn {accessor}(&self)->{class}<'_>{{{class}(&self.core)}}}} impl {class}<'_>{{{}}}\n",methods.join("\n")));
         let label = group_tag(group).unwrap_or(group);
+        let reference_slug = label
+            .to_lowercase()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join("-");
         domains.push(format!(
-            "| [{label}](https://roxyapi.com/api-reference) | `{accessor}()` | {} |",
+            "| [{label}](https://roxyapi.com/api-reference/{reference_slug}) | `{accessor}()` | {} |",
             methods.len()
         ));
     }

@@ -938,6 +938,12 @@ async fn languages(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
 ```
 <!-- END:COMMON_CALLS -->
 
+## Built for coding agents
+
+[![RoxyAPI Rust SDK, your coding agent ready for Rust.](https://raw.githubusercontent.com/RoxyAPI/sdk-rust/main/assets/agents.png)](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md)
+
+Every crate includes [AGENTS.md](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md), with typed examples, common calls, and the complete method catalogue. Point your coding agent at this guide to use the SDK. For tool access, connect to [Remote MCP](https://roxyapi.com/docs/mcp).
+
 ## Render charts and readings
 
 Use [RoxyAPI UI](https://roxyapi.com/docs/ui) to render chart wheels, tables and reading cards in your web frontend. Fetch data from Rust, then pass the response to the matching component.
@@ -947,26 +953,26 @@ Use [RoxyAPI UI](https://roxyapi.com/docs/ui) to render chart wheels, tables and
 <!-- BEGIN:DOMAINS -->
 | Domain | Accessor | Operations |
 |---|---|---|
-| [Western Astrology](https://roxyapi.com/api-reference) | `astrology()` | 39 |
-| [Vedic Astrology](https://roxyapi.com/api-reference) | `vedic_astrology()` | 58 |
-| [Forecast](https://roxyapi.com/api-reference) | `forecast()` | 5 |
-| [Human Design](https://roxyapi.com/api-reference) | `human_design()` | 12 |
-| [Chinese Astrology](https://roxyapi.com/api-reference) | `chinese_astrology()` | 16 |
-| [Feng Shui](https://roxyapi.com/api-reference) | `feng_shui()` | 11 |
-| [Mesoamerican Astrology](https://roxyapi.com/api-reference) | `mesoamerican_astrology()` | 18 |
-| [Vastu](https://roxyapi.com/api-reference) | `vastu()` | 10 |
-| [Numerology](https://roxyapi.com/api-reference) | `numerology()` | 20 |
-| [Kabbalah](https://roxyapi.com/api-reference) | `kabbalah()` | 12 |
-| [Tarot](https://roxyapi.com/api-reference) | `tarot()` | 10 |
-| [Biorhythm](https://roxyapi.com/api-reference) | `biorhythm()` | 6 |
-| [Ayurveda](https://roxyapi.com/api-reference) | `ayurveda()` | 8 |
-| [I-Ching](https://roxyapi.com/api-reference) | `iching()` | 9 |
-| [Crystals and Healing Stones](https://roxyapi.com/api-reference) | `crystals()` | 12 |
-| [Dreams](https://roxyapi.com/api-reference) | `dreams()` | 5 |
-| [Angel Numbers](https://roxyapi.com/api-reference) | `angel_numbers()` | 4 |
-| [Location and Timezone](https://roxyapi.com/api-reference) | `location()` | 3 |
-| [Usage](https://roxyapi.com/api-reference) | `usage()` | 1 |
-| [Languages](https://roxyapi.com/api-reference) | `languages()` | 2 |
+| [Western Astrology](https://roxyapi.com/api-reference/western-astrology) | `astrology()` | 39 |
+| [Vedic Astrology](https://roxyapi.com/api-reference/vedic-astrology) | `vedic_astrology()` | 58 |
+| [Forecast](https://roxyapi.com/api-reference/forecast) | `forecast()` | 5 |
+| [Human Design](https://roxyapi.com/api-reference/human-design) | `human_design()` | 12 |
+| [Chinese Astrology](https://roxyapi.com/api-reference/chinese-astrology) | `chinese_astrology()` | 16 |
+| [Feng Shui](https://roxyapi.com/api-reference/feng-shui) | `feng_shui()` | 11 |
+| [Mesoamerican Astrology](https://roxyapi.com/api-reference/mesoamerican-astrology) | `mesoamerican_astrology()` | 18 |
+| [Vastu](https://roxyapi.com/api-reference/vastu) | `vastu()` | 10 |
+| [Numerology](https://roxyapi.com/api-reference/numerology) | `numerology()` | 20 |
+| [Kabbalah](https://roxyapi.com/api-reference/kabbalah) | `kabbalah()` | 12 |
+| [Tarot](https://roxyapi.com/api-reference/tarot) | `tarot()` | 10 |
+| [Biorhythm](https://roxyapi.com/api-reference/biorhythm) | `biorhythm()` | 6 |
+| [Ayurveda](https://roxyapi.com/api-reference/ayurveda) | `ayurveda()` | 8 |
+| [I-Ching](https://roxyapi.com/api-reference/i-ching) | `iching()` | 9 |
+| [Crystals and Healing Stones](https://roxyapi.com/api-reference/crystals-and-healing-stones) | `crystals()` | 12 |
+| [Dreams](https://roxyapi.com/api-reference/dreams) | `dreams()` | 5 |
+| [Angel Numbers](https://roxyapi.com/api-reference/angel-numbers) | `angel_numbers()` | 4 |
+| [Location and Timezone](https://roxyapi.com/api-reference/location-and-timezone) | `location()` | 3 |
+| [Usage](https://roxyapi.com/api-reference/usage) | `usage()` | 1 |
+| [Languages](https://roxyapi.com/api-reference/languages) | `languages()` | 2 |
 <!-- END:DOMAINS -->
 
 ## Languages
