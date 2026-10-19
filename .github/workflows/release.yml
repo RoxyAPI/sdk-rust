@@ -5,6 +5,10 @@ on:
     - cron: '20 6 * * *'
   workflow_dispatch:
     inputs:
+      dry_run:
+        description: Validate the scheduled release plan without publishing
+        type: boolean
+        default: false
       version_bump:
         description: Optional patch, minor, or major bump
         type: choice
@@ -42,7 +46,7 @@ jobs:
       - name: Plan release
         id: plan
         env:
-          EVENT_NAME: ${{ github.event_name }}
+          EVENT_NAME: ${{ inputs.dry_run && 'schedule' || github.event_name }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_BUMP: ${{ inputs.version_bump }}
         run: >-
@@ -62,19 +66,19 @@ jobs:
           cargo +1.88.0 check --locked --lib
       - name: Check registry publication
         id: publication
-        if: steps.plan.outputs.release == 'true'
+        if: steps.plan.outputs.release == 'true' && inputs.dry_run != true
         run: python3 scripts/release.py publication
       - name: Authenticate to crates.io
         id: auth
-        if: steps.plan.outputs.release == 'true' && steps.publication.outputs.publish == 'true'
+        if: steps.plan.outputs.release == 'true' && inputs.dry_run != true
         uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
       - name: Publish
-        if: steps.plan.outputs.release == 'true' && steps.publication.outputs.publish == 'true'
+        if: steps.plan.outputs.release == 'true' && steps.publication.outputs.publish == 'true' && inputs.dry_run != true
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
         run: cargo publish --locked --allow-dirty
       - name: Commit, tag, and push
-        if: steps.plan.outputs.release == 'true'
+        if: steps.plan.outputs.release == 'true' && inputs.dry_run != true
         env:
           VERSION: ${{ steps.plan.outputs.version }}
         run: |
@@ -85,6 +89,7 @@ jobs:
           git tag "v$VERSION"
           git push --atomic origin HEAD:main "refs/tags/v$VERSION"
       - name: Reconcile GitHub release notes
+        if: inputs.dry_run != true
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/release.py github-release --notes "$RUNNER_TEMP/release-notes.md"
