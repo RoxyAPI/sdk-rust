@@ -14,7 +14,9 @@ use tokio::{
 
 pub const FIXTURE_KEY: &str = "fixture-credential";
 pub const LANGUAGES: &str = r#"{"languages":[]}"#;
-pub const ERROR: &str = r#"{"error":"Request rejected","code":"INVALID_INPUT","doc_url":"https://roxyapi.com/docs/errors","field":"date"}"#;
+pub const ERROR: &str = r#"{"error":"date: Invalid date","code":"validation_error","doc_url":"https://roxyapi.com/docs/errors#validation_error","issues":[{"path":"date","message":"Invalid date","code":"invalid_string","format":"regex"}]}"#;
+pub const RATE_LIMITED: &str = r#"{"error":"Per-minute limit reached","code":"rate_limit_per_minute","doc_url":"https://roxyapi.com/docs/errors#rate_limit_per_minute"}"#;
+pub const SATURATED: &str = r#"{"error":"Calculations are briefly at capacity","code":"compute_saturated","doc_url":"https://roxyapi.com/docs/errors#compute_saturated"}"#;
 
 #[derive(Clone)]
 pub struct Reply {
@@ -60,8 +62,11 @@ pub struct Server {
 
 impl Server {
     pub async fn start(replies: Vec<Reply>) -> Self {
+        Self::listen(TcpListener::bind("127.0.0.1:0").await.unwrap(), replies)
+    }
+
+    pub fn listen(listener: TcpListener, replies: Vec<Reply>) -> Self {
         assert!(!replies.is_empty());
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());
         let requests = Arc::new(Mutex::new(Vec::new()));
         let observed = Arc::clone(&requests);

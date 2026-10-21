@@ -5,6 +5,8 @@ export PYTHONDONTWRITEBYTECODE=1
 python3 -m unittest discover -s scripts -p 'test_*.py'
 python3 scripts/brand.py
 ROXYAPI_SPEC_FILE=specs/openapi.json ./scripts/generate --check
+cargo deny --locked check advisories licenses bans sources
+cargo deny --locked --manifest-path tools/generate/Cargo.toml check advisories licenses bans sources
 cargo fmt --all -- --check
 cargo fmt --manifest-path tools/generate/Cargo.toml --all -- --check
 cargo clippy --locked --manifest-path tools/generate/Cargo.toml --all-targets -- -D warnings
@@ -12,4 +14,5 @@ cargo test --locked --manifest-path tools/generate/Cargo.toml --all-targets
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked --all-targets
 cargo test --locked --doc
+RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps
 cargo package --locked --allow-dirty

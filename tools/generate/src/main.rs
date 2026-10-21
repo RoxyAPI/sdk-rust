@@ -1,4 +1,7 @@
+mod models;
+
 use heck::{ToSnakeCase, ToUpperCamelCase};
+use models::Models;
 use openapi_to_rust::{
     CodeGenerator, GeneratorConfig, SchemaAnalyzer,
     analysis::UntypedVerdict,
@@ -166,7 +169,7 @@ fn operations(spec: &Value) -> Result<Vec<(String, String, Value)>> {
                     return Err("one tag maps to multiple URL namespaces".into());
                 }
             }
-            let mut merged = BTreeMap::new();
+            let mut merged: Vec<Value> = Vec::new();
             for source in [item, operation] {
                 if let Some(parameters) = source["parameters"].as_array() {
                     for parameter in parameters {
@@ -191,12 +194,18 @@ fn operations(spec: &Value) -> Result<Vec<(String, String, Value)>> {
                             return Err("path parameters must be required".into());
                         }
                         scalar_schema(spec, &parameter["schema"])?;
-                        merged.insert((location.to_string(), name.to_string()), parameter.clone());
+                        let declared = merged
+                            .iter()
+                            .position(|other| other["in"] == location && other["name"] == name);
+                        match declared {
+                            Some(index) => merged[index] = parameter.clone(),
+                            None => merged.push(parameter.clone()),
+                        }
                     }
                 }
             }
             let mut operation = operation.clone();
-            operation["parameters"] = Value::Array(merged.into_values().collect());
+            operation["parameters"] = Value::Array(merged);
             result.push((path.clone(), method.to_uppercase(), operation));
         }
     }
@@ -206,35 +215,6 @@ fn operations(spec: &Value) -> Result<Vec<(String, String, Value)>> {
             .cmp(&b.2["operationId"].as_str())
     });
     Ok(result)
-}
-fn strip_docs(attributes: &mut Vec<syn::Attribute>) {
-    attributes.retain(|attribute| !attribute.path().is_ident("doc"));
-}
-struct PublicDocs;
-macro_rules! visit_docs {
-    ($($method:ident, $kind:ident;)+) => {$ (fn $method(&mut self, node:&mut syn::$kind){strip_docs(&mut node.attrs); syn::visit_mut::$method(self,node);})+};
-}
-impl syn::visit_mut::VisitMut for PublicDocs {
-    visit_docs! {
-        visit_item_struct_mut, ItemStruct;
-        visit_item_enum_mut, ItemEnum;
-        visit_item_impl_mut, ItemImpl;
-        visit_impl_item_fn_mut, ImplItemFn;
-        visit_item_fn_mut, ItemFn;
-        visit_field_mut, Field;
-        visit_variant_mut, Variant;
-        visit_item_mod_mut, ItemMod;
-        visit_item_use_mut, ItemUse;
-        visit_item_type_mut, ItemType;
-        visit_item_const_mut, ItemConst;
-    }
-}
-fn public_models(source: &str) -> Result<String> {
-    use syn::visit_mut::VisitMut;
-    let mut syntax = syn::parse_file(source)?;
-    strip_docs(&mut syntax.attrs);
-    PublicDocs.visit_file_mut(&mut syntax);
-    Ok(prettyplease::unparse(&syntax))
 }
 fn marker(source: &str, name: &str, content: &str) -> Result<String> {
     let start = format!("<!-- BEGIN:{name} -->");
@@ -258,6 +238,7 @@ fn common_calls(source: &str, groups: &[(String, String)]) -> Result<String> {
     let mut imports = Vec::new();
     let mut declarations = Vec::new();
     let mut functions = BTreeMap::new();
+    let mut first = None;
     for item in &syntax.items {
         match item {
             syn::Item::Use(item) => imports.push(original(item.span())?),
@@ -268,6 +249,7 @@ fn common_calls(source: &str, groups: &[(String, String)]) -> Result<String> {
                     return Err("common-call functions must be async".into());
                 }
                 let name = function.sig.ident.to_string();
+                first.get_or_insert_with(|| name.clone());
                 if functions.insert(name, function).is_some() {
                     return Err("duplicate common-call namespace".into());
                 }
@@ -279,10 +261,12 @@ fn common_calls(source: &str, groups: &[(String, String)]) -> Result<String> {
     if functions.keys().any(|name| !expected.contains(name)) {
         return Err("common-call function has no matching URL namespace".into());
     }
+    // The first curated function sets up the shared declarations and renders first.
+    let first = first.ok_or("common-call examples missing")?;
     let setup = groups
         .iter()
-        .find(|(name, _)| name == "location" && functions.contains_key(name))
-        .ok_or("location common-call setup missing")?;
+        .find(|(name, _)| *name == first)
+        .ok_or("common-call function has no matching URL namespace")?;
     let mut rendered = Vec::new();
     for (name, label) in std::iter::once(setup).chain(
         groups
@@ -354,16 +338,129 @@ fn analyze_models(spec: Value) -> Result<(openapi_to_rust::SchemaAnalysis, Gener
     };
     Ok((analysis, config))
 }
+/// Generate public models. `parameter_models` and every request body are the models callers build.
+fn generate_models(
+    spec: Value,
+    parameter_models: &BTreeSet<String>,
+) -> Result<(openapi_to_rust::SchemaAnalysis, Models)> {
+    let (mut analysis, config) = analyze_models(spec)?;
+    let mut roots = parameter_models.clone();
+    roots.extend(analysis.operations.values().filter_map(|operation| {
+        operation
+            .request_body
+            .as_ref()
+            .and_then(|body| body.schema_name())
+            .map(str::to_string)
+    }));
+    // Operations are withheld so the generator emits no builder types; models.rs owns constructors.
+    let operations = std::mem::take(&mut analysis.operations);
+    let descriptions = models::tag_schemas(&mut analysis);
+    let source = CodeGenerator::new(config).generate(&mut analysis)?;
+    analysis.operations = operations;
+    let models = models::emit(&source, &analysis, &descriptions, &roots)?;
+    Ok((analysis, models))
+}
 fn schema_fixture() -> Value {
-    json!({"openapi":"3.1.0","info":{"title":"Schema fixture","version":"1"},"paths":{},"components":{"schemas":{"Fixture":{"type":"object","required":["requiredNullable","union","kind","date"],"properties":{
-        "requiredNullable":{"type":["string","null"]},
+    json!({"openapi":"3.1.0","info":{"title":"Schema fixture","version":"1"},"paths":{},"components":{"schemas":{"Fixture":{"type":"object","description":"Fixture [model] with <markup>.","required":["requiredNullable","union","kind","date"],"properties":{
+        "requiredNullable":{"type":["string","null"],"description":"Required, may be null."},
         "optional":{"type":"string"},
         "optionalNullable":{"type":["string","null"]},
         "union":{"anyOf":[{"type":"string"},{"type":"number"}]},
         "kind":{"type":"string","enum":["first","second"]},
         "date":{"type":"string","format":"date"},
-        "amount":{"type":"number","format":"float"}
+        "amount":{"type":"number","format":"float"},
+        "nestedValue":{"type":"object","properties":{"innerName":{"type":"string"}}}
     }}}}})
+}
+/// Typed error codes from `info.x-error-codes`, in specification order, on the string enum definition.
+fn error_codes(spec: &Value) -> Result<String> {
+    let mut variants = Vec::new();
+    let mut statuses = Vec::new();
+    let mut seen = BTreeSet::new();
+    for entry in spec["info"]["x-error-codes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        let code = entry["code"].as_str().ok_or("error code missing")?;
+        let status = entry["status"].as_u64().map(u16::try_from).transpose()?;
+        let variant = code.to_upper_camel_case();
+        if variant == "Other" || syn::parse_str::<syn::Ident>(&variant).is_err() {
+            return Err(format!("error code {code} has no Rust variant").into());
+        }
+        if !seen.insert(variant.clone()) {
+            return Err(format!("error code {code} is not unique").into());
+        }
+        let documented_status = match status {
+            Some(status) => format!("HTTP {status}."),
+            None => "Any HTTP status.".into(),
+        };
+        // A blank line keeps the status apart from the wire value the definition documents first.
+        variants.push((
+            "///\n".to_string()
+                + &models::doc_comment(&[
+                    documented_status,
+                    entry["meaning"].as_str().unwrap_or_default().into(),
+                ]),
+            variant.clone(),
+            code.to_string(),
+        ));
+        statuses.push(format!("Self::{variant} => {status:?},"));
+    }
+    let docs = models::doc_comment(&[
+        "A stable API error code. Codes this SDK version does not list arrive as `Other`.".into(),
+    ]);
+    Ok(format!(
+        "{}{}",
+        models::string_enum_source(&docs, "ErrorCode", &variants),
+        rust(&format!(
+            "impl ErrorCode {{
+                /// The HTTP status the API documents for this code, when listed.
+                pub fn status(&self) -> Option<u16> {{
+                    match self {{ {} Self::Other(_) => None, }}
+                }}
+            }}",
+            statuses.join(" ")
+        ))?
+    ))
+}
+/// The error table for README and AGENTS, from `info.x-error-codes` in specification order.
+fn errors_region(spec: &Value) -> String {
+    let rows = spec["info"]["x-error-codes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|entry| {
+            let status = entry["status"]
+                .as_u64()
+                .map_or_else(|| "Any".to_string(), |status| status.to_string());
+            let meaning = entry["meaning"].as_str().unwrap_or_default();
+            format!(
+                "| {status} | `{}` | {} |",
+                entry["code"].as_str().unwrap_or_default(),
+                meaning.replace('|', "\\|")
+            )
+        })
+        .collect::<Vec<_>>();
+    format!(
+        "Every error returns `{{ error, code, doc_url }}`. Switch on `code`; `error` is readable text and may change. Each meaning below says whether and when to retry, and `Retry-After` carries the wait when the response sends it. Every code is documented at <https://roxyapi.com/docs/errors>.\n\n| Status | Code | Meaning |\n|---|---|---|\n{}",
+        rows.join("\n")
+    )
+}
+/// The reference page for a tag: its own `externalDocs` link, else the public per-tag page.
+fn reference_url(tag: Option<&Value>, label: &str) -> String {
+    tag.and_then(|tag| tag["externalDocs"]["url"].as_str())
+        .map(str::to_string)
+        .unwrap_or_else(|| {
+            format!(
+                "https://roxyapi.com/api-reference/{}",
+                label
+                    .to_lowercase()
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join("-")
+            )
+        })
 }
 fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
     if !spec["openapi"]
@@ -395,13 +492,16 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
                 ) {
                     return Err("unsupported parameter location".into());
                 }
-                if !parameter["schema"].is_object() {
+                let mut schema = parameter["schema"].clone();
+                if !schema.is_object() {
                     return Err("unsupported parameter reference".into());
                 }
-                if properties
-                    .insert(name.into(), parameter["schema"].clone())
-                    .is_some()
+                if schema.get("description").is_none()
+                    && let Some(description) = parameter.get("description")
                 {
+                    schema["description"] = description.clone();
+                }
+                if properties.insert(name.into(), schema).is_some() {
                     return Err("parameter names collide".into());
                 }
                 if parameter["required"] == true {
@@ -410,7 +510,7 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
             }
             extra_schemas.insert(
                 format!("{}Params", id.to_upper_camel_case()),
-                json!({"type":"object","properties":properties,"required":required}),
+                json!({"type":"object","description":format!("Path and query parameters of `{id}`."),"properties":properties,"required":required}),
             );
         }
         let responses = model_spec["paths"][path][method.to_lowercase()]["responses"]
@@ -418,6 +518,7 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
             .ok_or("responses missing")?;
         responses.retain(|status, _| status.starts_with('2'));
     }
+    let parameter_models = extra_schemas.keys().cloned().collect::<BTreeSet<_>>();
     let schemas = model_spec["components"]["schemas"]
         .as_object_mut()
         .ok_or("schemas missing")?;
@@ -426,12 +527,10 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
             return Err("parameter model name collision".into());
         }
     }
-    let (mut analysis, config) = analyze_models(model_spec)?;
-    let generator = CodeGenerator::new(config);
-    let mut models = generator.generate(&mut analysis)?;
+    let (analysis, models) = generate_models(model_spec, &parameter_models)?;
     let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut walker = String::from(
-        "pub async fn call(client: &roxyapi::Roxy, operation_id: &str, params: serde_json::Value, body: serde_json::Value) -> Result<serde_json::Value,roxyapi::Error> { match operation_id {\n",
+        "pub async fn call(client: &roxyapi::Roxy, operation_id: &str, params: serde_json::Value, body: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> { match operation_id {\n",
     );
     let mut signatures: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (path, method, operation) in &ops {
@@ -461,6 +560,13 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         }
         let parameters = operation["parameters"].as_array().filter(|p| !p.is_empty());
         let params_name = format!("{}Params", id.to_upper_camel_case());
+        let field = |wire: &str| -> Result<String> {
+            models.structs[&params_name]
+                .iter()
+                .find(|field| field.wire == wire)
+                .map(|field| field.ident.to_string())
+                .ok_or_else(|| format!("parameter {wire} missing from {params_name}").into())
+        };
         let body_name = operation_analysis
             .request_body
             .as_ref()
@@ -470,25 +576,40 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         let mut decode = String::new();
         if parameters.is_some() {
             arguments.push(format!("params: &types::{params_name}"));
-            decode.push_str(&format!("let params: roxyapi::types::{params_name} = serde_json::from_value(params).map_err(roxyapi::Error::Decode)?;\n"));
+            decode.push_str(&format!(
+                "let params: roxyapi::types::{params_name} = serde_json::from_value(params)?;\n"
+            ));
             call_arguments.push("&params");
         }
         if let Some(body_name) = body_name {
             arguments.push(format!("body: &types::{body_name}"));
-            decode.push_str(&format!("let body: roxyapi::types::{body_name} = serde_json::from_value(body).map_err(roxyapi::Error::Decode)?;\n"));
+            decode.push_str(&format!(
+                "let body: roxyapi::types::{body_name} = serde_json::from_value(body)?;\n"
+            ));
             call_arguments.push("&body");
         } else if operation.get("requestBody").is_some() {
             return Err("unsupported request body".into());
         }
-        let mut code = format!(
+        let text = |key: &str| operation[key].as_str().unwrap_or_default().to_string();
+        let (summary, description) = (text("summary"), text("description"));
+        let mut code = models::doc_comment(&[
+            summary.clone(),
+            if description == summary {
+                String::new()
+            } else {
+                description
+            },
+            format!("`{method} {path}`"),
+        ]);
+        code.push_str(&format!(
             "pub async fn {name}(&self{}{}) -> Result<types::{response}, crate::Error> {{\n",
             if arguments.is_empty() { "" } else { ", " },
             arguments.join(", ")
-        );
+        ));
         let mut segments = Vec::new();
         for part in path.split('/').filter(|p| !p.is_empty()) {
             if let Some(parameter) = path_parameter(part)? {
-                let field = identifier(parameter);
+                let field = field(parameter)?;
                 let temporary = identifier(&format!("path_{parameter}"));
                 code.push_str(&format!("let {temporary} = params.{field}.to_string();\n"));
                 segments.push(format!("&{temporary}"));
@@ -500,45 +621,18 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
             "let request = self.0.request(reqwest::Method::{method}, &[{}])?;\n",
             segments.join(", ")
         ));
-        if let Some(parameters) = parameters {
-            for parameter in parameters {
-                if parameter["in"] != "query" {
-                    continue;
-                }
-                let wire = parameter["name"].as_str().ok_or("parameter name missing")?;
-                let field = identifier(wire);
-                if parameter["required"] == true {
-                    code.push_str(&format!(
-                        "let request = request.query(&[({wire:?}, &params.{field})]);\n"
-                    ));
-                } else {
-                    code.push_str(&format!("let request = if let Some(value) = &params.{field} {{ request.query(&[({wire:?}, value)]) }} else {{ request }};\n"));
-                }
+        for parameter in parameters.into_iter().flatten() {
+            if parameter["in"] != "query" {
+                continue;
             }
-            let required = parameters
-                .iter()
-                .filter(|p| p["required"] == true)
-                .collect::<Vec<_>>();
-            if !required.is_empty()
-                && required.iter().all(|p| {
-                    p["schema"].get("enum").is_none()
-                        && ["string", "number", "integer", "boolean"]
-                            .contains(&p["schema"]["type"].as_str().unwrap_or(""))
-                })
-            {
-                let fields = parameters
-                    .iter()
-                    .map(|p| {
-                        Ok(format!(
-                            "{}:Default::default()",
-                            identifier(p["name"].as_str().ok_or("parameter name missing")?)
-                        ))
-                    })
-                    .collect::<Result<Vec<_>>>()?;
-                models.push_str(&format!(
-                    "\nimpl Default for {params_name} {{ fn default()->Self {{Self{{{}}}}} }}\n",
-                    fields.join(",")
+            let wire = parameter["name"].as_str().ok_or("parameter name missing")?;
+            let field = field(wire)?;
+            if parameter["required"] == true {
+                code.push_str(&format!(
+                    "let request = request.query(&[({wire:?}, &params.{field})]);\n"
                 ));
+            } else {
+                code.push_str(&format!("let request = if let Some(value) = &params.{field} {{ request.query(&[({wire:?}, value)]) }} else {{ request }};\n"));
             }
         }
         if body_name.is_some() {
@@ -546,7 +640,7 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         }
         code.push_str("self.0.send(request).await\n}\n");
         groups.entry(group.clone()).or_default().push(code);
-        walker.push_str(&format!("{id:?}=>{{{decode} let result=client.{group_ident}().{name}({}).await?; serde_json::to_value(result).map_err(roxyapi::Error::Decode) }},\n",call_arguments.join(",")));
+        walker.push_str(&format!("{id:?}=>{{{decode} let result=client.{group_ident}().{name}({}).await?; Ok(serde_json::to_value(result)?) }},\n",call_arguments.join(",")));
         signatures.entry(group).or_default().push(format!(
             "| `{id}` | `{}().{}({})` |",
             group_ident,
@@ -558,7 +652,7 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
                 .join(", ")
         ));
     }
-    walker.push_str("_=>Err(roxyapi::Error::Configuration(\"unknown operation\")),}}\n");
+    walker.push_str("_=>Err(\"unknown operation\".into()),}}\n");
     let mut source = String::from("use super::types;\nuse crate::client::Core;\n");
     let mut domains = Vec::new();
     let mut method_rows = Vec::new();
@@ -567,6 +661,10 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         ops.iter()
             .find(|(path, _, _)| namespace(path).ok() == Some(group))
             .and_then(|(_, _, op)| op["tags"][0].as_str())
+    };
+    let tag_object = |group: &str| {
+        tags.iter()
+            .find(|tag| tag["name"].as_str() == group_tag(group))
     };
     let mut ordered_groups = groups.iter().collect::<Vec<_>>();
     ordered_groups.sort_by_key(|(group, _)| {
@@ -595,29 +693,28 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         );
         let class = group.to_upper_camel_case();
         let accessor = identifier(group);
-        source.push_str(&format!("#[derive(Debug,Clone,Copy)] pub struct {class}<'a>(&'a Core); impl crate::Roxy {{pub fn {accessor}(&self)->{class}<'_>{{{class}(&self.core)}}}} impl {class}<'_>{{{}}}\n",methods.join("\n")));
         let label = group_tag(group).unwrap_or(group);
-        let reference_slug = label
-            .to_lowercase()
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join("-");
+        let class_doc = models::doc_comment(&[tag_object(group)
+            .and_then(|tag| tag["description"].as_str())
+            .unwrap_or_default()
+            .to_string()]);
+        let accessor_doc = models::doc_comment(&[format!("{label} operations.")]);
+        source.push_str(&format!("{class_doc}#[derive(Debug,Clone,Copy)] pub struct {class}<'a>(&'a Core); impl crate::Roxy {{{accessor_doc}pub fn {accessor}(&self)->{class}<'_>{{{class}(&self.core)}}}} impl {class}<'_>{{{}}}\n",methods.join("\n")));
         domains.push(format!(
-            "| [{label}](https://roxyapi.com/api-reference/{reference_slug}) | `{accessor}()` | {} |",
+            "| [{label}]({}) | `{accessor}()` | {} |",
+            reference_url(tag_object(group), label),
             methods.len()
         ));
     }
-    let mut language_values = Vec::new();
+    // Every language any operation accepts, in first-seen order; no language parameter leaves it empty.
+    let mut language_values: Vec<&str> = Vec::new();
     for (_, _, op) in &ops {
-        if let Some(parameters) = op["parameters"].as_array() {
-            for p in parameters {
-                if p["name"] == "lang"
-                    && let Some(values) = p["schema"]["enum"].as_array()
-                {
-                    if language_values.is_empty() {
-                        language_values = values.clone();
-                    } else if language_values != *values {
-                        return Err("language parameter enums differ".into());
+        for p in op["parameters"].as_array().into_iter().flatten() {
+            if p["name"] == "lang" {
+                for value in p["schema"]["enum"].as_array().into_iter().flatten() {
+                    let value = value.as_str().ok_or("language value is not a string")?;
+                    if !language_values.contains(&value) {
+                        language_values.push(value);
                     }
                 }
             }
@@ -625,9 +722,10 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
     }
     let languages = language_values
         .iter()
-        .map(|v| format!("`{}`", v.as_str().unwrap_or("")))
+        .map(|v| format!("`{v}`"))
         .collect::<Vec<_>>()
         .join(", ");
+    let errors = errors_region(spec);
     let domains = format!(
         "| Domain | Accessor | Operations |\n|---|---|---|\n{}",
         domains.join("\n")
@@ -640,6 +738,7 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         let original = fs::read_to_string(repository.join(doc))?;
         let mut document = marker(&original, "DOMAINS", &domains)?;
         document = marker(&document, "LANGS", &languages)?;
+        document = marker(&document, "ERRORS", &errors)?;
         document = marker(&document, "COMMON_CALLS", &examples)?;
         if doc == "AGENTS.md" {
             document = marker(&document, "METHODS", &methods)?;
@@ -657,17 +756,25 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
     write(
         output,
         "src/generated/mod.rs",
-        "pub mod types;\nmod operations;\npub use operations::*;\n",
+        &format!(
+            "{}\n/// Typed request and response models generated from the API specification.\npub mod types;\nmod error_codes;\nmod operations;\npub use error_codes::ErrorCode;\npub use operations::*;\n",
+            models::STRING_ENUM
+        ),
     )?;
-    write(output, "src/generated/types.rs", &public_models(&models)?)?;
+    write(output, "src/generated/types.rs", &models.source)?;
     write(output, "src/generated/operations.rs", &rust(&source)?)?;
+    write(output, "src/generated/error_codes.rs", &error_codes(spec)?)?;
     write(output, "tests/generated/dispatch.rs", &rust(&walker)?)?;
-    let (mut fixture_analysis, fixture_config) = analyze_models(schema_fixture())?;
-    let fixture = CodeGenerator::new(fixture_config).generate(&mut fixture_analysis)?;
+    write(
+        output,
+        "tests/generated/enum_values.rs",
+        &rust(&models::enum_fixture(&models.enums))?,
+    )?;
+    let (_, fixture) = generate_models(schema_fixture(), &BTreeSet::new())?;
     write(
         output,
         "tests/generated/schema_fixture.rs",
-        &public_models(&fixture)?,
+        &models::standalone(&fixture.source),
     )?;
     println!(
         "Generated {} operations in {} namespaces",
@@ -719,14 +826,14 @@ mod tests {
     fn common_calls_preserve_source_and_share_visible_setup() {
         let source = r#"use roxyapi::{Roxy, types};
 struct Birth { city: String }
+/// Resolve a birthplace once.
+async fn location(roxy: &Roxy) -> Birth {
+    Birth { city: "München".into() }
+}
 /// Read a chart for München.
 async fn astrology(roxy: &Roxy, birth: &Birth) {
     let nested = || { "{literal}" };
     println!("{}", nested());
-}
-/// Resolve a birthplace once.
-async fn location(roxy: &Roxy) -> Birth {
-    Birth { city: "München".into() }
 }
 fn main() {}
 "#;
@@ -912,11 +1019,86 @@ fn main() {}
         assert!(generate(&spec, Path::new("."), Path::new("unused")).is_err());
     }
     #[test]
-    fn doc_metadata_is_removed_without_changing_a_description_field() {
-        let source = "/// Metadata\n#[derive(Debug)] pub struct Result { /// Display text\n pub description: String }";
-        let output = public_models(source).unwrap();
-        assert!(output.contains("pub description: String"));
-        assert!(!output.contains("Metadata"));
-        assert!(!output.contains("Display text"));
+    fn models_are_documented_extensible_and_non_exhaustive() {
+        let (_, models) = generate_models(schema_fixture(), &BTreeSet::new()).unwrap();
+        let source = &models.source;
+        assert!(source.contains("/// Fixture \\[model\\] with &lt;markup&gt;."));
+        assert!(source.contains("/// Required, may be null."));
+        assert!(!source.contains("roxyapi-schema:"));
+        assert!(!source.contains("#[default]"));
+        assert!(source.contains(
+            "    FixtureKind {\n        First = \"first\",\n        Second = \"second\",\n    }"
+        ));
+        let lines = source.lines().map(str::trim).collect::<Vec<_>>();
+        for (index, line) in lines.iter().enumerate() {
+            if line.starts_with("pub struct ") || line.starts_with("pub enum ") {
+                assert_eq!(lines[index - 1], "#[non_exhaustive]", "{line}");
+            }
+        }
+        assert_eq!(
+            models.enums,
+            [("FixtureKind".into(), vec!["first".into(), "second".into()])]
+        );
+    }
+    #[test]
+    fn request_models_get_ordered_constructors_and_setters() {
+        let spec = json!({"openapi":"3.1.0","info":{"title":"Fixture","version":"1"},"paths":{},"components":{"schemas":{
+            "Request":{"type":"object","required":["zone","date"],"properties":{
+                "date":{"type":"string"},"zone":{"type":"string"},"note":{"type":["string","null"]},"inner":{"$ref":"#/components/schemas/Inner"}}},
+            "Inner":{"type":"object","properties":{"personAGates":{"type":"integer"}}},
+            "Reply":{"type":"object","properties":{"text":{"type":"string"}}}
+        }}});
+        let roots = BTreeSet::from(["Request".to_string()]);
+        let (_, models) = generate_models(spec, &roots).unwrap();
+        let source = models.source.split_whitespace().collect::<String>();
+        assert!(source.contains("pubfnnew(zone:String,date:String)->Self"));
+        assert!(source.contains("pubfnwith_note(mutself,value:Option<String>)->Self"));
+        assert!(source.contains("implInner{"));
+        assert!(!source.contains("implReply{"));
+        assert!(!source.contains("Builder"));
+        assert!(source.contains(
+            "#[derive(Debug,Clone,Deserialize,Serialize,Default)]#[non_exhaustive]pubstructInner"
+        ));
+        assert!(source.contains(
+            "#[derive(Debug,Clone,Deserialize,Serialize)]#[non_exhaustive]pubstructReply"
+        ));
+    }
+    #[test]
+    fn error_codes_follow_the_specification() {
+        let spec = json!({"info":{"x-error-codes":[{"code":"not_found","status":404,"meaning":"No [such] thing."}]}});
+        let source = error_codes(&spec).unwrap();
+        assert!(source.contains("HTTP 404."));
+        assert!(source.contains(r"/// No \[such\] thing."));
+        assert!(source.contains(r#"NotFound = "not_found""#));
+        assert!(source.contains("Self::NotFound => Some(404)"));
+        let duplicate =
+            json!({"info":{"x-error-codes":[{"code":"a","status":400},{"code":"a","status":401}]}});
+        assert!(error_codes(&duplicate).is_err());
+        assert!(
+            error_codes(&json!({}))
+                .unwrap()
+                .contains("    ErrorCode {\n    }")
+        );
+    }
+    #[test]
+    fn error_table_keeps_order_and_escapes_pipes() {
+        let spec = json!({"info":{"x-error-codes":[
+            {"code":"b","status":400,"meaning":"One | two."},
+            {"code":"a","status":null,"meaning":"Fallback."}
+        ]}});
+        let region = errors_region(&spec);
+        assert!(region.ends_with("| 400 | `b` | One \\| two. |\n| Any | `a` | Fallback. |"));
+    }
+    #[test]
+    fn reference_links_prefer_tag_documentation() {
+        assert_eq!(
+            reference_url(None, "Location and Timezone"),
+            "https://roxyapi.com/api-reference/location-and-timezone"
+        );
+        let tag = json!({"externalDocs":{"url":"https://roxyapi.com/docs/location"}});
+        assert_eq!(
+            reference_url(Some(&tag), "Location"),
+            "https://roxyapi.com/docs/location"
+        );
     }
 }

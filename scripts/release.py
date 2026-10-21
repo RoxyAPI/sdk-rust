@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan spec-driven releases and verify already published package contents."""
+"""Plan releases from the shipped crate contents and verify already published package contents."""
 
 import argparse
 import io
@@ -15,9 +15,9 @@ from urllib.request import Request, urlopen
 
 
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
-METHODS = {"get", "post", "put", "patch", "delete", "head", "options", "trace"}
 COPY_KEYS = {"description", "summary", "title", "example", "examples", "externalDocs", "tags", "deprecated"}
 MAP_KEYS = {"paths", "properties", "patternProperties", "schemas", "$defs", "headers", "content", "responses", "mapping"}
+CONSTRUCTOR = re.compile(r"^impl ([A-Za-z_][A-Za-z0-9_]*) \{\n(?:[ \t]*///[^\n]*\n)*[ \t]*pub fn new\(([^)]*)\) -> Self \{", re.M)
 
 
 def semver(value):
@@ -39,80 +39,115 @@ def contract(value, mapping=False):
     return value
 
 
-def classify(old, new):
-    """Conservatively require a major version for changes to existing contracts."""
-    level = 0
-
-    def compare(before, after, key="", mapping=False):
-        nonlocal level
-        if before == after:
-            return
+def additive(old, new):
+    """Whether the contract gained paths, schemas, properties, parameters or enum values."""
+    def grew(before, after, key="", mapping=False):
         if isinstance(before, dict) and isinstance(after, dict):
-            removed = before.keys() - after.keys()
-            added = after.keys() - before.keys()
-            required = not mapping and isinstance(before.get("required", []), list) and isinstance(after.get("required", []), list)
-            if required:
-                previous_required = set(before.get("required", []))
-                current_required = set(after.get("required", []))
-                if previous_required != current_required:
-                    level = 2
-                removed -= {"required"}
-                added -= {"required"}
-            if removed:
-                level = 2
-            if added:
-                if (mapping and key in {"paths", "schemas", "parameters", "requestBodies", "responses", "securitySchemes"}) or (key.startswith("/") and added <= METHODS):
-                    level = max(level, 1)
-                else:
-                    level = 2
-            for name in before.keys() & after.keys():
-                if required and name == "required":
-                    continue
-                compare(before[name], after[name], name, not mapping and name in MAP_KEYS)
-        elif key == "parameters" and isinstance(before, list) and isinstance(after, list):
-            indexed_before = {(item.get("in"), item.get("name"), item.get("$ref")): item for item in before}
-            indexed_after = {(item.get("in"), item.get("name"), item.get("$ref")): item for item in after}
-            if indexed_before.keys() != indexed_after.keys():
-                level = 2
-            for name in indexed_before.keys() & indexed_after.keys():
-                compare(indexed_before[name], indexed_after[name])
+            return bool(after.keys() - before.keys()) or any(grew(before[name], after[name], name, not mapping and name in MAP_KEYS) for name in before.keys() & after.keys())
+        if isinstance(before, list) and isinstance(after, list):
+            if key == "required":
+                return False
+            if key == "enum":
+                return any(value not in before for value in after)
+            if key == "parameters":
+                index = lambda items: {(item.get("in"), item.get("name"), item.get("$ref")): item for item in items if isinstance(item, dict)}
+                previous, current = index(before), index(after)
+                return bool(current.keys() - previous.keys()) or any(grew(previous[name], current[name]) for name in previous.keys() & current.keys())
+            return len(after) > len(before) or any(grew(a, b) for a, b in zip(before, after))
+        return False
+
+    surface = lambda document: contract({key: (document or {}).get(key, {}) for key in ["paths", "components"]}, True)
+    return grew(surface(old), surface(new), mapping=True)
+
+
+def rust_api_break(baseline):
+    """Ask cargo-semver-checks whether the crate breaks the public API of a published version."""
+    result = subprocess.run(["cargo", "semver-checks", "check-release", "--baseline-version", baseline, "--release-type", "minor"])
+    if result.returncode not in {0, 100}:
+        raise ValueError(f"cargo-semver-checks could not compare against {baseline} (exit {result.returncode})")
+    return result.returncode == 100
+
+
+def generated_sources(tag=None):
+    """Generated Rust sources by file name, from a release tag or from the working tree."""
+    if tag is None:
+        return {path.name: path.read_text() for path in sorted(Path("src/generated").glob("*.rs"))}
+    names = subprocess.check_output(["git", "ls-tree", "--name-only", f"{tag}:src/generated"], text=True).split()
+    return {name: subprocess.check_output(["git", "show", f"{tag}:src/generated/{name}"], text=True) for name in names if name.endswith(".rs")}
+
+
+def parameters(text):
+    """Ordered (name, type) pairs of a constructor parameter list, split on top-level commas."""
+    items, depth, current = [], 0, ""
+    for character in text:
+        depth += (character in "<([") - (character in ">)]")
+        if character == "," and depth == 0:
+            items.append(current)
+            current = ""
         else:
-            level = 2
+            current += character
+    pairs = []
+    for item in [*items, current]:
+        item = " ".join(item.split())
+        if not item:
+            continue
+        name, separator, kind = item.partition(":")
+        if not separator or not name.strip().removeprefix("r#").isidentifier() or not kind.strip():
+            raise ValueError(f"Cannot parse generated constructor parameter {item!r}")
+        pairs.append((name.strip(), kind.strip()))
+    return tuple(pairs)
 
-    compare(contract(old.get("paths", {}), True), contract(new.get("paths", {}), True), "paths", mapping=True)
-    compare(contract(old.get("components", {}).get("schemas", {}), True), contract(new.get("components", {}).get("schemas", {}), True), "schemas", mapping=True)
-    for key in {"parameters", "requestBodies", "responses", "securitySchemes"}:
-        compare(contract(old.get("components", {}).get(key, {}), True), contract(new.get("components", {}).get(key, {}), True), key, mapping=True)
-    compare(old.get("security"), new.get("security"))
-    return ("patch", "minor", "major")[level]
+
+def constructors(sources):
+    """Every generated `pub fn new` signature by type; fails when any constructor escapes the expected format."""
+    found = {}
+    for file, text in sources.items():
+        matches = CONSTRUCTOR.findall(text)
+        if len(matches) != text.count("pub fn new("):
+            raise ValueError(f"Cannot parse every generated constructor in src/generated/{file}; the constructor guard in scripts/release.py must learn the new format")
+        for name, signature in matches:
+            if name in found:
+                raise ValueError(f"Generated type {name} has more than one constructor")
+            found[name] = parameters(signature)
+    return found
 
 
-def plan(old_spec, new_spec, manifest_version, last_version, published_versions, event, exact="", bump=""):
+def constructor_breaks(previous, current):
+    """Existing constructors whose ordered parameter names or types changed, or that disappeared.
+
+    Same-typed parameters swapped by a reordered required list still compile for callers and send swapped
+    values, which cargo-semver-checks cannot see. A constructor on a new type is additive.
+    """
+    render = lambda signature: ", ".join(f"{name}: {kind}" for name, kind in signature)
+    return [
+        f"{name}::new({render(signature)}) " + (f"is now {name}::new({render(current[name])})" if name in current else "was removed")
+        for name, signature in sorted(previous.items()) if current.get(name) != signature
+    ]
+
+
+def plan(change, manifest_version, last_version, published_versions, event, exact="", bump="", detail=""):
+    """Choose the release version for a change level of patch, minor or major."""
     semver(manifest_version)
     if exact and bump:
         raise ValueError("Choose an exact version or a version bump, not both")
     if bump and bump not in {"patch", "minor", "major"}:
         raise ValueError("Version bump must be patch, minor, or major")
-    change = classify(old_spec, new_spec) if old_spec is not None else "patch"
-    changed = old_spec != new_spec
-    if event != "workflow_dispatch" and not changed:
-        return None
     if change == "major" and (event != "workflow_dispatch" or (not exact and bump != "major")):
-        raise ValueError("Breaking spec change requires an explicit major release")
+        raise ValueError("The public Rust API changed incompatibly since the last published version. Scheduled releases never publish a major version; dispatch the release with version_bump=major after reviewing the change" + (f"\n{detail}" if detail else ""))
     floor = max([manifest_version, *published_versions, *([last_version] if last_version else [])], key=semver)
     if exact:
         semver(exact)
         if (last_version and semver(exact) <= semver(last_version)) or semver(exact) < semver(floor):
             raise ValueError("Exact version must exceed the last release and not precede the manifest or registry")
         if last_version and semver(exact) < semver(bump_version(last_version, change)):
-            raise ValueError(f"Spec change requires at least a {change} release")
+            raise ValueError(f"This change requires at least a {change} release")
         target = exact
-    elif old_spec is None and not published_versions and not bump:
+    elif last_version is None and not published_versions and not bump:
         target = manifest_version
     else:
         requested = bump or change
         if change == "minor" and requested == "patch":
-            raise ValueError("Additive spec change requires at least a minor release")
+            raise ValueError("Additive change requires at least a minor release")
         target = bump_version(floor, requested)
     return {"version": target, "change": change, "bootstrap": not published_versions}
 
@@ -179,6 +214,27 @@ def registry_versions(name):
     return [version["num"] for version in data["versions"] if VERSION.fullmatch(version["num"])]
 
 
+def registry_crate(name, version):
+    with request(f"https://crates.io/api/v1/crates/{name}/{version}/download") as response:
+        return response.read()
+
+
+def local_crate(name, version):
+    metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version=1"]))
+    return (Path(metadata["target_directory"]) / "package" / f"{name}-{version}.crate").read_bytes()
+
+
+def shipped(files, name):
+    """Package members with the crate version masked, so equal contents compare equal across versions."""
+    masked = dict(files)
+    for manifest in ["Cargo.toml", "Cargo.toml.orig"]:
+        if manifest in masked:
+            masked[manifest] = re.sub(rb'(?ms)(^\[package\]\n(?:(?!^\[).)*?^version\s*=\s*)"[^"\n]*"', rb'\1"0.0.0"', masked[manifest], count=1)
+    if "Cargo.lock" in masked:
+        masked["Cargo.lock"] = re.sub(rb'(name = "' + re.escape(name.encode()) + rb'"\nversion = )"[^"\n]*"', rb'\1"0.0.0"', masked["Cargo.lock"])
+    return masked
+
+
 def archive_files(data):
     files = {}
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as archive:
@@ -230,14 +286,12 @@ def main():
     manifest_path = Path("Cargo.toml")
     manifest_text = manifest_path.read_text()
     package = tomllib.loads(manifest_text)["package"]
+    name = package["name"]
     if args.command == "publication":
-        versions = registry_versions(package["name"])
+        versions = registry_versions(name)
         version = package["version"]
         if version in versions:
-            metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version=1"]))
-            archive = Path(metadata["target_directory"]) / "package" / f"{package['name']}-{version}.crate"
-            with request(f"https://crates.io/api/v1/crates/{package['name']}/{version}/download") as response:
-                verify_archive(archive.read_bytes(), response.read())
+            verify_archive(local_crate(name, version), registry_crate(name, version))
             output(publish=False)
         else:
             if not versions:
@@ -250,8 +304,24 @@ def main():
     if args.event != "workflow_dispatch" and previous == spec:
         output(release=False)
         return
-    versions = registry_versions(package["name"])
-    result = plan(previous, spec, package["version"], last[1:] if last else None, versions, args.event, args.version, args.bump)
+    versions = registry_versions(name)
+    change, breaks = "patch", []
+    if versions:
+        baseline = max(versions, key=semver)
+        subprocess.run(["cargo", "package", "--locked", "--allow-dirty", "--no-verify", "--quiet"], check=True)
+        current = shipped(archive_files(local_crate(name, package["version"])), name)
+        if current == shipped(archive_files(registry_crate(name, baseline)), name):
+            if args.event != "workflow_dispatch":
+                output(release=False)
+                return
+        else:
+            if last:
+                breaks = constructor_breaks(constructors(generated_sources(last)), constructors(generated_sources()))
+            if breaks or rust_api_break(baseline):
+                change = "major"
+            elif additive(previous, spec):
+                change = "minor"
+    result = plan(change, package["version"], last[1:] if last else None, versions, args.event, args.version, args.bump, "\n".join(breaks))
     section = re.search(r"(?ms)^\[package\]\s*\n(.*?)(?=^\[|\Z)", manifest_text)
     if section is None:
         raise ValueError("Cargo.toml has no package section")

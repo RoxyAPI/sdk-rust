@@ -2,6 +2,11 @@ version: 2
 updates:
   - package-ecosystem: cargo
     directory: /
+    ignore:
+      # reqwest is re-exported, so its minor (0.x) and major releases are a
+      # roxyapi major release and are adopted by hand.
+      - dependency-name: reqwest
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
     schedule:
       interval: weekly
     groups:

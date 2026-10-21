@@ -19,11 +19,46 @@ fn resolved<'a>(schema: &'a Value, spec: &'a Value) -> &'a Value {
     }
 }
 
+/// Whether the schema or one of its union branches declares this JSON type.
+fn declares(schema: &Value, kind: &str) -> bool {
+    let direct = match schema.get("type") {
+        Some(Value::String(declared)) => declared == kind,
+        Some(Value::Array(declared)) => declared.iter().any(|declared| declared == kind),
+        _ => false,
+    };
+    direct
+        || ["anyOf", "oneOf"].iter().any(|key| {
+            schema
+                .get(*key)
+                .and_then(Value::as_array)
+                .is_some_and(|branches| branches.iter().any(|branch| declares(branch, kind)))
+        })
+}
+
+/// A specification example for a scalar schema, as the declared JSON type.
+fn example(schema: &Value) -> Option<Value> {
+    let value = schema
+        .get("example")
+        .or_else(|| schema.get("examples")?.as_array()?.first())?;
+    if value.is_object() || value.is_array() {
+        return None;
+    }
+    let float = declares(schema, "number") && !declares(schema, "integer");
+    Some(match value.as_f64() {
+        Some(number) if float => json!(number),
+        _ => value.clone(),
+    })
+}
+
+/// A value for every declared property, optional ones included, preferring specification examples.
 fn sample(schema: &Value, spec: &Value, depth: usize) -> Value {
     assert!(depth < 50, "recursive fixture schema");
     let schema = resolved(schema, spec);
     if let Some(value) = schema.get("const") {
         return value.clone();
+    }
+    if let Some(value) = example(schema) {
+        return value;
     }
     if let Some(value) = schema
         .get("enum")
@@ -44,13 +79,12 @@ fn sample(schema: &Value, spec: &Value, depth: usize) -> Value {
     if let Some(parts) = schema.get("allOf").and_then(Value::as_array) {
         let mut result = Map::new();
         for part in parts {
-            let value = sample(part, spec, depth + 1);
-            result.extend(
-                value
-                    .as_object()
-                    .expect("object intersection fixture")
-                    .clone(),
-            );
+            // An annotation-only part, such as a lone description, adds no fields.
+            match sample(part, spec, depth + 1) {
+                Value::Object(fields) => result.extend(fields),
+                Value::Null => {}
+                other => panic!("object intersection fixture: {other}"),
+            }
         }
         return Value::Object(result);
     }
@@ -66,17 +100,17 @@ fn sample(schema: &Value, spec: &Value, depth: usize) -> Value {
     match kind {
         Some("object") | None if schema.get("properties").is_some() => {
             let mut fields = Map::new();
-            if let Some(required) = schema.get("required").and_then(Value::as_array) {
-                for name in required.iter().map(|name| name.as_str().unwrap()) {
-                    fields.insert(
-                        name.to_owned(),
-                        sample(&schema["properties"][name], spec, depth + 1),
-                    );
-                }
+            for (name, property) in schema["properties"].as_object().unwrap() {
+                fields.insert(name.to_owned(), sample(property, spec, depth + 1));
             }
             Value::Object(fields)
         }
-        Some("object") => json!({}),
+        Some("object") => match schema.get("additionalProperties") {
+            Some(value) if value.as_object().is_some_and(|value| !value.is_empty()) => {
+                json!({"sample": sample(value, spec, depth + 1)})
+            }
+            _ => json!({}),
+        },
         Some("array") => {
             let count = schema
                 .get("minItems")
@@ -116,7 +150,7 @@ fn wire(value: &Value) -> String {
 }
 
 #[tokio::test]
-async fn every_spec_operation_sends_its_declared_request_and_decodes_its_response() {
+async fn every_spec_operation_sends_every_declared_field_and_decodes_every_response_field() {
     let spec: Value = serde_json::from_str(include_str!("../specs/openapi.json")).unwrap();
     let mut count = 0;
     for (path, item) in spec["paths"].as_object().unwrap() {
@@ -146,11 +180,9 @@ async fn every_spec_operation_sends_its_declared_request_and_decodes_its_respons
                 )
             {
                 let parameter = resolved(parameter, &spec);
-                if parameter["required"] != true {
-                    continue;
-                }
                 let name = parameter["name"].as_str().unwrap();
-                let value = sample(&parameter["schema"], &spec, 0);
+                let value =
+                    example(parameter).unwrap_or_else(|| sample(&parameter["schema"], &spec, 0));
                 match parameter["in"].as_str().unwrap() {
                     "path" => {
                         expected_path = expected_path.replace(&format!("{{{name}}}"), &wire(&value))

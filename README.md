@@ -15,7 +15,29 @@ cargo add tokio --features macros,rt-multi-thread
 
 Runs on the Tokio asynchronous runtime. Reuse a `Roxy` instance or clone it to share connections across handlers. Rust 1.88 or newer is required.
 
-## Quickstart
+## Start with one call
+
+Get real product value with a single typed call. No setup beyond your API key.
+
+```rust,no_run
+use roxyapi::{Roxy, types};
+
+# async fn run() -> Result<(), Box<dyn std::error::Error>> {
+let roxy = Roxy::new(std::env::var("ROXY_API_KEY")?)?;
+let horoscope = roxy
+    .astrology()
+    .get_daily_horoscope(&types::GetDailyHoroscopeParams::new(
+        types::GetDailyHoroscopeParamsSign::Aries,
+    ))
+    .await?;
+println!("{} {} {}", horoscope.overview, horoscope.love, horoscope.lucky_number);
+# Ok(())
+# }
+```
+
+Then expand into charts, compatibility, numerology, tarot, and more.
+
+## Quick start
 
 <!-- BEGIN:QUICKSTART -->
 ```rust,no_run
@@ -23,20 +45,21 @@ use roxyapi::{Roxy, types};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Retries 429, 500, 502, 503 and 504 by default. Optional settings, shown with their defaults:
+    // Roxy::builder(key).timeout(Duration::from_secs(30)).retry_policy(RetryPolicy::new(2)).build()?
     let roxy = Roxy::new(std::env::var("ROXY_API_KEY")?)?;
     let places = roxy
         .location()
-        .search_cities(&types::SearchCitiesParams {
-            q: "London, United Kingdom".into(),
-            ..Default::default()
-        })
+        .search_cities(&types::SearchCitiesParams::new(
+            "London, United Kingdom".into(),
+        ))
         .await?;
     let city = places.cities.first().ok_or("No matching city")?;
     let birth = types::NatalChartRequest::new(
         "1990-01-15".into(),
+        "14:30:00".into(),
         city.latitude,
         city.longitude,
-        "14:30:00".into(),
         types::NatalChartRequestTimezone::String(city.timezone.clone()),
     );
     let chart = roxy
@@ -48,6 +71,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 <!-- END:QUICKSTART -->
+
+## Domains
+
+<!-- BEGIN:DOMAINS -->
+| Domain | Accessor | Operations |
+|---|---|---|
+| [Western Astrology](https://roxyapi.com/api-reference/western-astrology) | `astrology()` | 39 |
+| [Vedic Astrology](https://roxyapi.com/api-reference/vedic-astrology) | `vedic_astrology()` | 58 |
+| [Forecast](https://roxyapi.com/api-reference/forecast) | `forecast()` | 5 |
+| [Human Design](https://roxyapi.com/api-reference/human-design) | `human_design()` | 12 |
+| [Chinese Astrology](https://roxyapi.com/api-reference/chinese-astrology) | `chinese_astrology()` | 16 |
+| [Feng Shui](https://roxyapi.com/api-reference/feng-shui) | `feng_shui()` | 11 |
+| [Mesoamerican Astrology](https://roxyapi.com/api-reference/mesoamerican-astrology) | `mesoamerican_astrology()` | 18 |
+| [Vastu](https://roxyapi.com/api-reference/vastu) | `vastu()` | 10 |
+| [Numerology](https://roxyapi.com/api-reference/numerology) | `numerology()` | 20 |
+| [Kabbalah](https://roxyapi.com/api-reference/kabbalah) | `kabbalah()` | 12 |
+| [Tarot](https://roxyapi.com/api-reference/tarot) | `tarot()` | 10 |
+| [Biorhythm](https://roxyapi.com/api-reference/biorhythm) | `biorhythm()` | 6 |
+| [Ayurveda](https://roxyapi.com/api-reference/ayurveda) | `ayurveda()` | 8 |
+| [I-Ching](https://roxyapi.com/api-reference/i-ching) | `iching()` | 9 |
+| [Crystals and Healing Stones](https://roxyapi.com/api-reference/crystals-and-healing-stones) | `crystals()` | 12 |
+| [Dreams](https://roxyapi.com/api-reference/dreams) | `dreams()` | 5 |
+| [Angel Numbers](https://roxyapi.com/api-reference/angel-numbers) | `angel_numbers()` | 4 |
+| [Location and Timezone](https://roxyapi.com/api-reference/location-and-timezone) | `location()` | 3 |
+| [Usage](https://roxyapi.com/api-reference/usage) | `usage()` | 1 |
+| [Languages](https://roxyapi.com/api-reference/languages) | `languages()` | 2 |
+<!-- END:DOMAINS -->
 
 ## Most-used endpoints
 
@@ -71,10 +121,9 @@ struct Birth {
 async fn location(roxy: &Roxy) -> Result<Birth, Box<dyn Error>> {
     let places = roxy
         .location()
-        .search_cities(&types::SearchCitiesParams {
-            q: "London, United Kingdom".into(),
-            ..Default::default()
-        })
+        .search_cities(&types::SearchCitiesParams::new(
+            "London, United Kingdom".into(),
+        ))
         .await?;
     let place = places.cities.into_iter().next().ok_or("No matching city")?;
     println!("Birthplace: {}, {}", place.city, place.country);
@@ -102,9 +151,9 @@ Build birth-chart products, daily content and lunar wellness features.
 async fn astrology(roxy: &Roxy, birth: &Birth) -> Result<(), Box<dyn Error>> {
     let request = types::NatalChartRequest::new(
         birth.date.clone(),
+        birth.time.clone(),
         birth.place.latitude,
         birth.place.longitude,
-        birth.time.clone(),
         types::NatalChartRequestTimezone::String(birth.place.timezone.clone()),
     );
     let natal = roxy
@@ -114,12 +163,9 @@ async fn astrology(roxy: &Roxy, birth: &Birth) -> Result<(), Box<dyn Error>> {
     println!("Ascendant: {}", natal.ascendant.sign);
     let horoscope = roxy
         .astrology()
-        .get_daily_horoscope(&types::GetDailyHoroscopeParams {
-            sign: types::GetDailyHoroscopeParamsSign::Aries,
-            date: None,
-            lang: None,
-            timezone: None,
-        })
+        .get_daily_horoscope(&types::GetDailyHoroscopeParams::new(
+            types::GetDailyHoroscopeParamsSign::Aries,
+        ))
         .await?;
     println!("Daily horoscope: {}", horoscope.overview);
     let moon = roxy
@@ -145,13 +191,13 @@ Reuse the same birth and location for sidereal charts and timing tools.
 #     place: types::SearchCitiesResponseCitiesItem,
 # }
 async fn vedic_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), Box<dyn Error>> {
-    let mut request = types::BirthChartRequest::new(
+    let request = types::BirthChartRequest::new(
         birth.date.clone(),
+        birth.time.clone(),
         birth.place.latitude,
         birth.place.longitude,
-        birth.time.clone(),
-    );
-    request.timezone = Some(types::BirthChartRequestTimezone::String(
+    )
+    .with_timezone(types::BirthChartRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let kundli = roxy
@@ -159,12 +205,12 @@ async fn vedic_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), B
         .generate_birth_chart(&Default::default(), &request)
         .await?;
     println!("Kundli houses: {}", kundli.houses.len());
-    let mut request = types::GetDetailedPanchangRequest::new(
+    let request = types::GetDetailedPanchangRequest::new(
         date.into(),
         birth.place.latitude,
         birth.place.longitude,
-    );
-    request.timezone = Some(types::GetDetailedPanchangRequestTimezone::String(
+    )
+    .with_timezone(types::GetDetailedPanchangRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let panchang = roxy
@@ -172,13 +218,13 @@ async fn vedic_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), B
         .get_detailed_panchang(&Default::default(), &request)
         .await?;
     println!("Tithi: {}", panchang.tithi.name);
-    let mut request = types::GetCurrentDashaRequest::new(
+    let request = types::GetCurrentDashaRequest::new(
         birth.date.clone(),
+        birth.time.clone(),
         birth.place.latitude,
         birth.place.longitude,
-        birth.time.clone(),
-    );
-    request.timezone = Some(types::GetCurrentDashaRequestTimezone::String(
+    )
+    .with_timezone(types::GetCurrentDashaRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let dasha = roxy
@@ -186,13 +232,13 @@ async fn vedic_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), B
         .get_current_dasha(&Default::default(), &request)
         .await?;
     println!("Mahadasha: {}", dasha.mahadasha.planet);
-    let mut request = types::ManglikRequest::new(
+    let request = types::ManglikRequest::new(
         birth.date.clone(),
+        birth.time.clone(),
         birth.place.latitude,
         birth.place.longitude,
-        birth.time.clone(),
-    );
-    request.timezone = Some(types::ManglikRequestTimezone::String(
+    )
+    .with_timezone(types::ManglikRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let dosha = roxy
@@ -200,11 +246,11 @@ async fn vedic_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), B
         .check_manglik_dosha(&Default::default(), &request)
         .await?;
     println!("Mangal Dosha present: {}", dosha.present);
-    let mut request =
-        types::GetKpRulingPlanetsRequest::new(birth.place.latitude, birth.place.longitude);
-    request.timezone = Some(types::GetKpRulingPlanetsRequestTimezone::String(
-        birth.place.timezone.clone(),
-    ));
+    let request =
+        types::GetKpRulingPlanetsRequest::new(birth.place.latitude, birth.place.longitude)
+            .with_timezone(types::GetKpRulingPlanetsRequestTimezone::String(
+                birth.place.timezone.clone(),
+            ));
     let ruling = roxy
         .vedic_astrology()
         .get_kp_ruling_planets(&Default::default(), &request)
@@ -233,18 +279,16 @@ async fn forecast(
     start_date: &str,
     end_date: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let mut request =
-        types::ForecastTransitsRequest::new(types::ForecastTransitsRequestBirthData {
-            date: birth.date.clone(),
-            time: birth.time.clone(),
-            timezone: types::ForecastTransitsRequestBirthDataTimezone::String(
-                birth.place.timezone.clone(),
-            ),
-            latitude: Some(birth.place.latitude),
-            longitude: Some(birth.place.longitude),
-        });
-    request.start_date = Some(start_date.into());
-    request.end_date = Some(end_date.into());
+    let subject = types::ForecastTransitsRequestBirthData::new(
+        birth.date.clone(),
+        birth.time.clone(),
+        types::ForecastTransitsRequestBirthDataTimezone::String(birth.place.timezone.clone()),
+    )
+    .with_latitude(birth.place.latitude)
+    .with_longitude(birth.place.longitude);
+    let request = types::ForecastTransitsRequest::new(subject)
+        .with_start_date(start_date.into())
+        .with_end_date(end_date.into());
     let transits = roxy
         .forecast()
         .forecast_transits(&Default::default(), &request)
@@ -255,18 +299,16 @@ async fn forecast(
             event.date, event.description, event.significance
         );
     }
-    let mut request =
-        types::GenerateTimelineRequest::new(types::GenerateTimelineRequestBirthData {
-            date: birth.date.clone(),
-            time: birth.time.clone(),
-            timezone: types::GenerateTimelineRequestBirthDataTimezone::String(
-                birth.place.timezone.clone(),
-            ),
-            latitude: Some(birth.place.latitude),
-            longitude: Some(birth.place.longitude),
-        });
-    request.start_date = Some(start_date.into());
-    request.end_date = Some(end_date.into());
+    let subject = types::GenerateTimelineRequestBirthData::new(
+        birth.date.clone(),
+        birth.time.clone(),
+        types::GenerateTimelineRequestBirthDataTimezone::String(birth.place.timezone.clone()),
+    )
+    .with_latitude(birth.place.latitude)
+    .with_longitude(birth.place.longitude);
+    let request = types::GenerateTimelineRequest::new(subject)
+        .with_start_date(start_date.into())
+        .with_end_date(end_date.into());
     let timeline = roxy
         .forecast()
         .generate_timeline(&Default::default(), &request)
@@ -341,10 +383,7 @@ async fn chinese_astrology(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(),
     println!("Chinese zodiac: {}", animal.animal.name);
     let day = roxy
         .chinese_astrology()
-        .get_almanac_day(&types::GetAlmanacDayParams {
-            date: date.into(),
-            ..Default::default()
-        })
+        .get_almanac_day(&types::GetAlmanacDayParams::new(date.into()))
         .await?;
     println!("Favourable activities: {:?}", day.favours);
     Ok(())
@@ -378,11 +417,9 @@ async fn feng_shui(roxy: &Roxy, birth: &Birth) -> Result<(), Box<dyn Error>> {
         .feng_shui()
         .generate_flying_star_chart(
             &Default::default(),
-            &types::GenerateFlyingStarChartRequest {
-                period: Some(9),
-                facing: Some(types::GenerateFlyingStarChartRequestFacing::S2),
-                ..Default::default()
-            },
+            &types::GenerateFlyingStarChartRequest::new()
+                .with_period(9)
+                .with_facing(types::GenerateFlyingStarChartRequestFacing::S2),
         )
         .await?;
     println!(
@@ -437,15 +474,13 @@ Turn plot dimensions, facing and door position into a sourced entrance reading.
 #     place: types::SearchCitiesResponseCitiesItem,
 # }
 async fn vastu(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
-    let mut request =
-        types::CalculateEntrancePadaRequest::new(types::CalculateEntrancePadaRequestPlot {
-            width: Some(30.0),
-            depth: Some(40.0),
-            unit: Some(types::CalculateEntrancePadaRequestPlotUnit::Feet),
-            ..Default::default()
-        });
-    request.facing = Some(types::CalculateEntrancePadaRequestFacing::North);
-    request.door_position = Some(0.4);
+    let plot = types::CalculateEntrancePadaRequestPlot::new()
+        .with_width(30.0)
+        .with_depth(40.0)
+        .with_unit(types::CalculateEntrancePadaRequestPlotUnit::Feet);
+    let request = types::CalculateEntrancePadaRequest::new(plot)
+        .with_facing(types::CalculateEntrancePadaRequestFacing::North)
+        .with_door_position(0.4);
     let entrance = roxy
         .vastu()
         .calculate_entrance_pada(&Default::default(), &request)
@@ -480,17 +515,17 @@ async fn numerology(roxy: &Roxy, birth: &Birth) -> Result<(), Box<dyn Error>> {
         .numerology()
         .calculate_life_path(
             &Default::default(),
-            &types::CalculateLifePathRequest { year, month, day },
+            &types::CalculateLifePathRequest::new(year, month, day),
         )
         .await?;
     println!("Life Path: {}", life_path.number);
-    let request = types::GenerateNumerologyChartRequest::new(day, "Jane Smith".into(), month, year);
+    let request = types::GenerateNumerologyChartRequest::new("Jane Smith".into(), year, month, day);
     let chart = roxy
         .numerology()
         .generate_numerology_chart(&Default::default(), &request)
         .await?;
     println!("Core numbers: {:?}", chart.core_numbers);
-    let request = types::CalculatePersonalYearRequest::new(day, month);
+    let request = types::CalculatePersonalYearRequest::new(month, day);
     let personal_year = roxy
         .numerology()
         .calculate_personal_year(&Default::default(), &request)
@@ -521,21 +556,18 @@ async fn kabbalah(roxy: &Roxy, birth: &Birth) -> Result<(), Box<dyn Error>> {
         .kabbalah()
         .calculate_gematria(
             &Default::default(),
-            &types::CalculateGematriaRequest {
-                text: Some("Sarah".into()),
-                ..Default::default()
-            },
+            &types::CalculateGematriaRequest::new().with_text("Sarah".into()),
         )
         .await?;
     println!("Hebrew form: {}", gematria.chosen.hebrew);
     for cipher in &gematria.values {
         println!("{}: {}", cipher.name, cipher.value);
     }
-    let mut request = types::GenerateBirthProfileRequest::new(
+    let request = types::GenerateBirthProfileRequest::new(
         birth.date.clone(),
         types::GenerateBirthProfileRequestTimezone::String(birth.place.timezone.clone()),
-    );
-    request.time = Some(birth.time.clone());
+    )
+    .with_time(birth.time.clone());
     let profile = roxy
         .kabbalah()
         .generate_birth_profile(&Default::default(), &request)
@@ -564,10 +596,7 @@ async fn tarot(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
         .tarot()
         .get_daily_card(
             &Default::default(),
-            &types::GetDailyCardRequest {
-                seed: Some(seed.into()),
-                ..Default::default()
-            },
+            &types::GetDailyCardRequest::new().with_seed(seed.into()),
         )
         .await?;
     println!("Daily card: {}, {}", daily.card.name, daily.daily_message);
@@ -575,10 +604,9 @@ async fn tarot(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
         .tarot()
         .cast_three_card(
             &Default::default(),
-            &types::CastThreeCardRequest {
-                question: Some("What should I focus on next quarter?".into()),
-                seed: Some(seed.into()),
-            },
+            &types::CastThreeCardRequest::new()
+                .with_question("What should I focus on next quarter?".into())
+                .with_seed(seed.into()),
         )
         .await?;
     for position in &three.positions {
@@ -588,10 +616,9 @@ async fn tarot(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
         .tarot()
         .cast_celtic_cross(
             &Default::default(),
-            &types::CastCelticCrossRequest {
-                question: Some("What should I understand about this situation?".into()),
-                seed: Some(seed.into()),
-            },
+            &types::CastCelticCrossRequest::new()
+                .with_question("What should I understand about this situation?".into())
+                .with_seed(seed.into()),
         )
         .await?;
     for position in &celtic.positions {
@@ -601,10 +628,9 @@ async fn tarot(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
         .tarot()
         .cast_yes_no(
             &Default::default(),
-            &types::CastYesNoRequest {
-                question: Some("Should I take this opportunity?".into()),
-                seed: Some(seed.into()),
-            },
+            &types::CastYesNoRequest::new()
+                .with_question("Should I take this opportunity?".into())
+                .with_seed(seed.into()),
         )
         .await?;
     println!("Answer: {}, strength {}", answer.answer, answer.strength);
@@ -631,8 +657,8 @@ async fn biorhythm(
     start_date: &str,
     end_date: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let mut request = types::GetReadingRequest::new(birth.date.clone());
-    request.target_date = Some(start_date.into());
+    let request =
+        types::GetReadingRequest::new(birth.date.clone()).with_target_date(start_date.into());
     let reading = roxy
         .biorhythm()
         .get_reading(&Default::default(), &request)
@@ -641,9 +667,9 @@ async fn biorhythm(
     if let Some(physical) = reading.cycles.additional_properties.get("physical") {
         println!("Physical cycle: {}", physical.value);
     }
-    let mut request = types::GetForecastRequest::new(birth.date.clone());
-    request.start_date = Some(start_date.into());
-    request.end_date = Some(end_date.into());
+    let request = types::GetForecastRequest::new(birth.date.clone())
+        .with_start_date(start_date.into())
+        .with_end_date(end_date.into());
     let forecast = roxy
         .biorhythm()
         .get_forecast(&Default::default(), &request)
@@ -670,13 +696,13 @@ Read the birth-chart profile and sunrise-based routine with their explanatory no
 #     place: types::SearchCitiesResponseCitiesItem,
 # }
 async fn ayurveda(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), Box<dyn Error>> {
-    let mut request = types::AyurvedaConstitutionRequest::new(
+    let request = types::AyurvedaConstitutionRequest::new(
         birth.date.clone(),
+        birth.time.clone(),
         birth.place.latitude,
         birth.place.longitude,
-        birth.time.clone(),
-    );
-    request.timezone = Some(types::AyurvedaConstitutionRequestTimezone::String(
+    )
+    .with_timezone(types::AyurvedaConstitutionRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let constitution = roxy
@@ -687,12 +713,12 @@ async fn ayurveda(roxy: &Roxy, birth: &Birth, date: &str) -> Result<(), Box<dyn 
         "Dosha: {}. {}",
         constitution.composite.dominant, constitution.meta.disclaimer
     );
-    let mut request = types::AyurvedaDinacharyaRequest::new(
+    let request = types::AyurvedaDinacharyaRequest::new(
         date.into(),
         birth.place.latitude,
         birth.place.longitude,
-    );
-    request.timezone = Some(types::AyurvedaDinacharyaRequestTimezone::String(
+    )
+    .with_timezone(types::AyurvedaDinacharyaRequestTimezone::String(
         birth.place.timezone.clone(),
     ));
     let routine = roxy
@@ -726,10 +752,7 @@ async fn iching(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
         .iching()
         .get_daily_hexagram(
             &Default::default(),
-            &types::GetDailyHexagramRequest {
-                seed: Some(seed.into()),
-                ..Default::default()
-            },
+            &types::GetDailyHexagramRequest::new().with_seed(seed.into()),
         )
         .await?;
     println!(
@@ -738,20 +761,14 @@ async fn iching(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
     );
     let reading = roxy
         .iching()
-        .cast_reading(&types::CastReadingParams {
-            seed: Some(seed.into()),
-            ..Default::default()
-        })
+        .cast_reading(&types::CastReadingParams::new().with_seed(seed.into()))
         .await?;
     if let Some(hexagram) = &reading.hexagram {
         println!("Hexagram {}: {}", hexagram.number, hexagram.english);
     }
     let catalogue = roxy
         .iching()
-        .list_hexagrams(&types::ListHexagramsParams {
-            limit: Some(64),
-            ..Default::default()
-        })
+        .list_hexagrams(&types::ListHexagramsParams::new().with_limit(64))
         .await?;
     println!("Hexagrams: {}", catalogue.total);
     Ok(())
@@ -774,34 +791,25 @@ Add discovery filters to crystal catalogues, gift guides and wellness content.
 async fn crystals(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
     let by_sign = roxy
         .crystals()
-        .get_crystals_by_zodiac(&types::GetCrystalsByZodiacParams {
-            sign: types::GetCrystalsByZodiacParamsSign::Scorpio,
-            lang: None,
-            limit: None,
-            offset: None,
-        })
+        .get_crystals_by_zodiac(&types::GetCrystalsByZodiacParams::new(
+            types::GetCrystalsByZodiacParamsSign::Scorpio,
+        ))
         .await?;
     for crystal in &by_sign.crystals {
         println!("Zodiac crystal: {}", crystal.name);
     }
     let by_chakra = roxy
         .crystals()
-        .get_crystals_by_chakra(&types::GetCrystalsByChakraParams {
-            chakra: types::GetCrystalsByChakraParamsChakra::Heart,
-            lang: None,
-            limit: None,
-            offset: None,
-        })
+        .get_crystals_by_chakra(&types::GetCrystalsByChakraParams::new(
+            types::GetCrystalsByChakraParamsChakra::Heart,
+        ))
         .await?;
     for crystal in &by_chakra.crystals {
         println!("Heart chakra crystal: {}", crystal.name);
     }
     let birthstones = roxy
         .crystals()
-        .get_birthstones(&types::GetBirthstonesParams {
-            month: 1,
-            ..Default::default()
-        })
+        .get_birthstones(&types::GetBirthstonesParams::new(1))
         .await?;
     println!(
         "Birthstones for {}: {}",
@@ -827,17 +835,12 @@ Add dictionary-backed interpretation to dream journals and companion apps.
 async fn dreams(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
     let symbol = roxy
         .dreams()
-        .get_dream_symbol(&types::GetDreamSymbolParams {
-            id: "flying".into(),
-        })
+        .get_dream_symbol(&types::GetDreamSymbolParams::new("flying".into()))
         .await?;
     println!("{}: {}", symbol.name, symbol.meaning);
     let results = roxy
         .dreams()
-        .search_dream_symbols(&types::SearchDreamSymbolsParams {
-            q: Some("water".into()),
-            ..Default::default()
-        })
+        .search_dream_symbols(&types::SearchDreamSymbolsParams::new().with_q("water".into()))
         .await?;
     for symbol in &results.symbols {
         println!("{}: {}", symbol.id, symbol.name);
@@ -862,18 +865,12 @@ Read a familiar sequence or inspect the digit root of any positive integer.
 async fn angel_numbers(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
     let number = roxy
         .angel_numbers()
-        .get_angel_number(&types::GetAngelNumberParams {
-            number: "1111".into(),
-            ..Default::default()
-        })
+        .get_angel_number(&types::GetAngelNumberParams::new("1111".into()))
         .await?;
     println!("{}: {}", number.title, number.core_message);
     let sequence = roxy
         .angel_numbers()
-        .analyze_number_sequence(&types::AnalyzeNumberSequenceParams {
-            number: "4242".into(),
-            ..Default::default()
-        })
+        .analyze_number_sequence(&types::AnalyzeNumberSequenceParams::new("4242".into()))
         .await?;
     println!(
         "Digit root: {}, repeating: {}",
@@ -926,9 +923,9 @@ async fn languages(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
     }
     let labels = roxy
         .languages()
-        .get_field_labels(&types::GetFieldLabelsParams {
-            lang: Some(types::GetFieldLabelsParamsLang::Es),
-        })
+        .get_field_labels(
+            &types::GetFieldLabelsParams::new().with_lang(types::GetFieldLabelsParamsLang::Es),
+        )
         .await?;
     if let Some(label) = labels.fields.additional_properties.get("date") {
         println!("Date label: {label}");
@@ -938,54 +935,117 @@ async fn languages(roxy: &Roxy) -> Result<(), Box<dyn Error>> {
 ```
 <!-- END:COMMON_CALLS -->
 
-## Built for coding agents
+## Built for AI agents (Cursor, Claude Code, Copilot, Codex, Gemini CLI)
 
 [![RoxyAPI Rust SDK, your coding agent ready for Rust.](https://raw.githubusercontent.com/RoxyAPI/sdk-rust/main/assets/agents.png)](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md)
 
-Every crate includes [AGENTS.md](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md), with typed examples, common calls, and the complete method catalogue. Point your coding agent at this guide to use the SDK. For tool access, connect to [Remote MCP](https://roxyapi.com/docs/mcp).
+Every crate includes [AGENTS.md](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md), with typed examples, common calls, and the complete method catalogue. Point your coding agent at this guide to use the SDK.
 
-## Render charts and readings
+Prefer MCP? Every domain has a [Remote MCP server](https://roxyapi.com/docs/mcp) at `https://roxyapi.com/mcp/{domain}` (Streamable HTTP, no stdio, no self-hosting). One-line Claude Code setup:
 
-Use [RoxyAPI UI](https://roxyapi.com/docs/ui) to render chart wheels, tables and reading cards in your web frontend. Fetch data from Rust, then pass the response to the matching component.
+```bash
+claude mcp add-json --scope user roxy-astrology \
+  '{"type":"http","url":"https://roxyapi.com/mcp/astrology","headers":{"X-API-Key":"YOUR_KEY"}}'
+```
 
-## Domains
+## Authentication
 
-<!-- BEGIN:DOMAINS -->
-| Domain | Accessor | Operations |
-|---|---|---|
-| [Western Astrology](https://roxyapi.com/api-reference/western-astrology) | `astrology()` | 39 |
-| [Vedic Astrology](https://roxyapi.com/api-reference/vedic-astrology) | `vedic_astrology()` | 58 |
-| [Forecast](https://roxyapi.com/api-reference/forecast) | `forecast()` | 5 |
-| [Human Design](https://roxyapi.com/api-reference/human-design) | `human_design()` | 12 |
-| [Chinese Astrology](https://roxyapi.com/api-reference/chinese-astrology) | `chinese_astrology()` | 16 |
-| [Feng Shui](https://roxyapi.com/api-reference/feng-shui) | `feng_shui()` | 11 |
-| [Mesoamerican Astrology](https://roxyapi.com/api-reference/mesoamerican-astrology) | `mesoamerican_astrology()` | 18 |
-| [Vastu](https://roxyapi.com/api-reference/vastu) | `vastu()` | 10 |
-| [Numerology](https://roxyapi.com/api-reference/numerology) | `numerology()` | 20 |
-| [Kabbalah](https://roxyapi.com/api-reference/kabbalah) | `kabbalah()` | 12 |
-| [Tarot](https://roxyapi.com/api-reference/tarot) | `tarot()` | 10 |
-| [Biorhythm](https://roxyapi.com/api-reference/biorhythm) | `biorhythm()` | 6 |
-| [Ayurveda](https://roxyapi.com/api-reference/ayurveda) | `ayurveda()` | 8 |
-| [I-Ching](https://roxyapi.com/api-reference/i-ching) | `iching()` | 9 |
-| [Crystals and Healing Stones](https://roxyapi.com/api-reference/crystals-and-healing-stones) | `crystals()` | 12 |
-| [Dreams](https://roxyapi.com/api-reference/dreams) | `dreams()` | 5 |
-| [Angel Numbers](https://roxyapi.com/api-reference/angel-numbers) | `angel_numbers()` | 4 |
-| [Location and Timezone](https://roxyapi.com/api-reference/location-and-timezone) | `location()` | 3 |
-| [Usage](https://roxyapi.com/api-reference/usage) | `usage()` | 1 |
-| [Languages](https://roxyapi.com/api-reference/languages) | `languages()` | 2 |
-<!-- END:DOMAINS -->
+Get your API key at [roxyapi.com/pricing](https://roxyapi.com/pricing). Instant delivery after checkout.
 
-## Languages
+```rust,no_run
+use roxyapi::Roxy;
+
+let roxy = Roxy::new(std::env::var("ROXY_API_KEY")?)?;
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Never expose your API key client-side. Call Roxy from server code only.
+
+## Multi-language responses
+
+Interpretations and editorial text are available in 10 languages:
 
 <!-- BEGIN:LANGS -->
 `en`, `tr`, `de`, `es`, `hi`, `pt`, `fr`, `ru`, `zh-Hans`, `zh-Hant`
 <!-- END:LANGS -->
 
-## Errors and retries
+Set the response language on the params of any supported endpoint with the enum named after the operation. Defaults to `en`. English-only: dreams, location, usage. The two Chinese scripts (`zh-Hans`, `zh-Hant`) currently ship on Chinese astrology and feng shui; every other domain answers those codes in English per field. Untranslated fields fall back to English.
 
-Methods return `Result<T, roxyapi::Error>`. `Error::Api` contains the HTTP status, stable `code`, human-readable `error`, optional `doc_url`, and additional response details. Match on the code; message wording can change.
+```rust,no_run
+use roxyapi::{Roxy, types};
 
-Retries are disabled by default. Opt in to bounded exponential backoff for HTTP 429, 502, 503, and 504 responses. `Retry-After` accepts seconds or an HTTP date. A server delay above `max_delay` returns the error immediately. Transport failures, invalid JSON, and other HTTP statuses are returned directly. The overall deadline covers requests, retries, and response body reading.
+# async fn run(roxy: Roxy) -> Result<(), Box<dyn std::error::Error>> {
+let params = types::GetDailyHoroscopeParams::new(types::GetDailyHoroscopeParamsSign::Aries)
+    .with_lang(types::GetDailyHoroscopeParamsLang::Es);
+let horoscope = roxy.astrology().get_daily_horoscope(&params).await?;
+# Ok(())
+# }
+```
+
+## Error handling
+
+Methods return `Result<T, roxyapi::Error>`. `Error::Api` carries the HTTP `status`, the stable `code` (typed through `error_code()`), the human-readable `error`, `doc_url`, `retry_after`, and every other body field in `details`, such as `issues` on a validation error. Match on the code; message wording can change.
+
+<!-- BEGIN:ERRORS -->
+Every error returns `{ error, code, doc_url }`. Switch on `code`; `error` is readable text and may change. Each meaning below says whether and when to retry, and `Retry-After` carries the wait when the response sends it. Every code is documented at <https://roxyapi.com/docs/errors>.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 400 | `validation_error` | A field is missing or invalid. The body lists every failing field at once in issues, each with its path and the expected shape. |
+| 400 | `bad_request` | The request was rejected as a whole, for example a body that is not valid JSON or a date range that ends before it starts. |
+| 400 | `date_out_of_range` | A date lies outside the span the planetary positions are served for. The error names the supported dates. |
+| 401 | `api_key_required` | No API key was sent. |
+| 401 | `invalid_api_key` | The key sent is malformed or cannot be verified. |
+| 401 | `api_key_revoked` | The key was valid once and has since been revoked from the account page. |
+| 401 | `subscription_not_found` | The key verifies, but the subscription behind it no longer exists. |
+| 401 | `subscription_inactive` | The subscription behind the key is cancelled, expired or suspended, or a trial is past its end date. |
+| 401 | `publishable_key_not_allowed_on_mcp` | A publishable key was used on a Remote MCP server, which takes a secret key. |
+| 401 | `invalid_client_ip` | A keyless request could not be attributed to a caller. |
+| 401 | `unauthorized` | Authentication failed with no more specific reason to give. |
+| 403 | `forbidden` | The key is valid, but this request is not permitted. |
+| 403 | `origin_required` | A publishable key with an origin allowlist was used with no Origin header, as from a server or a native app. |
+| 403 | `origin_not_allowed` | The calling site is not on the origin allowlist of this publishable key. |
+| 404 | `not_found` | Nothing is served at this path, or the identifier in it does not exist. A path miss adds suggestions, the closest real endpoints. |
+| 405 | `method_not_allowed` | The path exists for a different HTTP method. The body lists the accepted methods in allow, as does the Allow header. |
+| 409 | `conflict` | The request cannot be applied in the current state. |
+| 410 | `gone` | The path was removed permanently. |
+| 413 | `payload_too_large` | The request body is larger than the API accepts. A body far over the cap is refused before it reaches the API and returns a bare 413 with no JSON body. |
+| 415 | `unsupported_media_type` | A request with a body was sent without Content-Type: application/json. |
+| 422 | `unprocessable_entity` | Every field is valid, but the combination cannot be computed. |
+| 429 | `rate_limit_exceeded` | The monthly request allowance is used up. Retry-After gives the seconds to the reset. |
+| 429 | `rate_limit_per_minute` | The per-minute limit of the plan was reached. Retry-After gives the seconds to the next minute, and the monthly allowance is not charged. |
+| 429 | `rate_limited` | A rate limit was reached, reported without the plan detail. |
+| 429 | `free_tier_exhausted` | A keyless request has used up its trial allowance. |
+| 500 | `internal_error` | The request failed inside our service. Retry with exponential backoff. |
+| 503 | `compute_saturated` | Heavy calculations are briefly at capacity. Send the same request again after Retry-After seconds. |
+| Any | `error` | A fallback for a status with no more specific code. The status and the error field carry the signal. |
+<!-- END:ERRORS -->
+
+```rust,no_run
+use roxyapi::{Error, ErrorCode, Roxy};
+
+# async fn run(roxy: Roxy) -> Result<(), Box<dyn std::error::Error>> {
+match roxy.languages().list_languages().await {
+    Ok(languages) => println!("{} languages", languages.languages.len()),
+    Err(Error::Api(error)) => match error.error_code() {
+        ErrorCode::RateLimitPerMinute | ErrorCode::ComputeSaturated => {
+            println!("busy, try again in {:?}", error.retry_after);
+        }
+        ErrorCode::ValidationError => println!("fix the request: {}", error.details["issues"]),
+        _ => println!("{error} ({})", error.doc_url.as_deref().unwrap_or_default()),
+    },
+    Err(Error::Decode { status, body, .. }) => {
+        println!("unexpected {status} response of {} bytes", body.len());
+    }
+    Err(other) => return Err(other.into()),
+}
+# Ok(())
+# }
+```
+
+### Retries
+
+Each call retries up to twice by default after HTTP 429, 500, 502, 503 or 504, and after a connection failure that happened before the request was sent. Waits use full jitter: a random delay up to `initial_delay * 2^attempt`, capped at `max_delay`. When the response carries `Retry-After` (seconds or an HTTP date), the wait is that delay plus a random padding of up to `initial_delay`; a `Retry-After` above `max_delay` returns the error at once with `retry_after` set. Read timeouts, invalid JSON and other statuses are returned directly. The client deadline covers every attempt, wait and response body, and a wait that would pass it returns the last error instead. `ApiError::is_retryable()` reports whether a status is one the policy retries.
 
 ```rust,no_run
 use roxyapi::{RetryPolicy, Roxy};
@@ -993,19 +1053,38 @@ use std::time::Duration;
 
 let roxy = Roxy::builder(std::env::var("ROXY_API_KEY")?)
     .timeout(Duration::from_secs(30))
-    .retry_policy(RetryPolicy {
-        max_retries: 2,
-        initial_delay: Duration::from_millis(500),
-        max_delay: Duration::from_secs(5),
-    })
+    .retry_policy(RetryPolicy::new(3).with_max_delay(Duration::from_secs(5)))
+    .build()?;
+
+// Turn retries off.
+let single_attempt = Roxy::builder(std::env::var("ROXY_API_KEY")?)
+    .retry_policy(RetryPolicy::new(0))
     .build()?;
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
-
-For proxy or TLS configuration, pass a `roxyapi::reqwest::ClientBuilder` through `http_client_builder`. Redirects and transport retries remain disabled. For a local test server, set `base_url` to its complete API prefix.
 
 ## Rust services
 
 Use the client from asynchronous handlers in Axum or Actix Web. Store it in shared application state and await SDK methods directly. Frameworks are development dependencies only. The SDK does not create or block a runtime.
 
-[Complete Rust reference](https://docs.rs/roxyapi) | [Agent guide](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md) | [Remote MCP](https://roxyapi.com/docs/mcp) | [MIT license](https://github.com/RoxyAPI/sdk-rust/blob/main/LICENSE)
+For proxy or TLS configuration, pass a `roxyapi::reqwest::ClientBuilder` through `http_client_builder`. Redirects stay disabled and any retry policy on that builder is replaced, so only `RetryPolicy` sends a request again. `roxyapi::reqwest` is part of the public API: a new major reqwest version ships only in a new major `roxyapi` version. The base URL must use HTTPS; plain HTTP is accepted only for loopback hosts, so a local test server can be reached by setting `base_url` to its complete API prefix.
+
+## Rendering with @roxyapi/ui
+
+Use [RoxyAPI UI](https://roxyapi.com/docs/ui) to render chart wheels, tables and reading cards in your web frontend. Fetch data from Rust, then pass the response to the matching component.
+
+## Links
+
+- [Documentation](https://roxyapi.com/docs)
+- [API Reference](https://roxyapi.com/api-reference)
+- [Pricing](https://roxyapi.com/pricing)
+- [MCP setup for AI agents](https://roxyapi.com/docs/mcp)
+- [Templates](https://roxyapi.com/templates)
+- [Rust reference](https://docs.rs/roxyapi)
+- [Agent guide (AGENTS.md)](https://github.com/RoxyAPI/sdk-rust/blob/main/AGENTS.md)
+- [Issues](https://github.com/RoxyAPI/sdk-rust/issues)
+- Other SDKs: [TypeScript](https://github.com/RoxyAPI/sdk-typescript), [Python](https://github.com/RoxyAPI/sdk-python), [PHP](https://github.com/RoxyAPI/sdk-php), [.NET](https://github.com/RoxyAPI/sdk-dotnet), [Go](https://github.com/RoxyAPI/sdk-go)
+
+## License
+
+MIT
