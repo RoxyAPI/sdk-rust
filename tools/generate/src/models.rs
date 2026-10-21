@@ -582,7 +582,7 @@ pub fn emit(
         &schemas,
         &references,
         &structs,
-        |owner, wire| property_doc(owner, wire),
+        property_doc,
     );
     let field_doc = |owner: &str, field: &Field| {
         if field.flatten {
