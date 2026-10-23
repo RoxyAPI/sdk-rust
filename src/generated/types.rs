@@ -41289,7 +41289,7 @@ pub struct CastDailyReadingRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token) to give each user their own hexagram for the day. Without a seed every caller receives the same shared hexagram of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41471,7 +41471,7 @@ pub struct GetDailyAngelNumberRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same angel number every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same angel number every time. Pass any unique identifier (userId, email hash, session token) to give each user their own angel number for the day. Without a seed every caller receives the same shared angel number of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41482,7 +41482,7 @@ pub struct GetDailyBiorhythmRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same reading every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same reading every time. Pass any unique identifier (userId, email hash, session token) to give each user their own reading for the day. Without a seed every caller receives the same shared reading of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41493,7 +41493,7 @@ pub struct GetDailyCardRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same card every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same card every time. Pass any unique identifier (userId, email hash, session token) to give each user their own card for the day. Without a seed every caller receives the same shared card of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41504,7 +41504,7 @@ pub struct GetDailyCrystalRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same crystal every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same crystal every time. Pass any unique identifier (userId, email hash, session token) to give each user their own crystal for the day. Without a seed every caller receives the same shared crystal of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41540,7 +41540,7 @@ pub struct GetDailyDreamSymbolRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same symbol every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same symbol every time. Pass any unique identifier (userId, email hash, session token) to give each user their own symbol for the day. Without a seed every caller receives the same shared symbol of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41551,7 +41551,7 @@ pub struct GetDailyHexagramRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token) to give each user their own hexagram for the day. Without a seed every caller receives the same shared hexagram of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }
@@ -41562,7 +41562,7 @@ pub struct GetDailyNumberRequest {
     /// Date for the reading in YYYY-MM-DD format. Defaults to today (UTC). Useful for viewing past daily readings or pre-generating future ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    /// Optional seed for reproducible readings. Same seed + same date = same number every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.
+    /// Optional seed for reproducible readings. Same seed + same date = same number every time. Pass any unique identifier (userId, email hash, session token) to give each user their own number for the day. Without a seed every caller receives the same shared number of the day.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<String>,
 }

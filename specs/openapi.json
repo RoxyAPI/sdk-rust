@@ -16734,7 +16734,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same angel number every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same angel number every time. Pass any unique identifier (userId, email hash, session token) to give each user their own angel number for the day. Without a seed every caller receives the same shared angel number of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -44789,7 +44789,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same reading every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same reading every time. Pass any unique identifier (userId, email hash, session token) to give each user their own reading for the day. Without a seed every caller receives the same shared reading of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -58933,7 +58933,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same crystal every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same crystal every time. Pass any unique identifier (userId, email hash, session token) to give each user their own crystal for the day. Without a seed every caller receives the same shared crystal of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -62097,7 +62097,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same symbol every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same symbol every time. Pass any unique identifier (userId, email hash, session token) to give each user their own symbol for the day. Without a seed every caller receives the same shared symbol of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -65611,7 +65611,16 @@
                     "type": "string"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "date",
+                    "gender"
+                  ],
+                  [
+                    "kua"
+                  ]
+                ]
               }
             }
           }
@@ -67055,7 +67064,15 @@
                     "type": "integer"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "facingDegrees"
+                  ],
+                  [
+                    "facing"
+                  ]
+                ]
               }
             }
           }
@@ -79313,7 +79330,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token) to give each user their own hexagram for the day. Without a seed every caller receives the same shared hexagram of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -79742,7 +79759,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same hexagram every time. Pass any unique identifier (userId, email hash, session token) to give each user their own hexagram for the day. Without a seed every caller receives the same shared hexagram of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -83395,7 +83412,25 @@
                     "type": "string"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "firstName",
+                    "secondName"
+                  ],
+                  [
+                    "firstName",
+                    "secondNameHebrew"
+                  ],
+                  [
+                    "firstNameHebrew",
+                    "secondName"
+                  ],
+                  [
+                    "firstNameHebrew",
+                    "secondNameHebrew"
+                  ]
+                ]
               }
             }
           },
@@ -84430,7 +84465,15 @@
                     "type": "string"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "text"
+                  ],
+                  [
+                    "textHebrew"
+                  ]
+                ]
               }
             }
           },
@@ -86094,7 +86137,15 @@
                     "type": "string"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "name"
+                  ],
+                  [
+                    "nameHebrew"
+                  ]
+                ]
               }
             }
           },
@@ -96619,7 +96670,15 @@
                     "type": "string"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "date"
+                  ],
+                  [
+                    "longCount"
+                  ]
+                ]
               }
             }
           },
@@ -102168,7 +102227,20 @@
                         "type": "integer"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "fullName",
+                        "year",
+                        "month",
+                        "day"
+                      ],
+                      [
+                        "lifePath",
+                        "expression",
+                        "soulUrge"
+                      ]
+                    ]
                   },
                   "person2": {
                     "properties": {
@@ -102222,7 +102294,20 @@
                         "type": "integer"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "fullName",
+                        "year",
+                        "month",
+                        "day"
+                      ],
+                      [
+                        "lifePath",
+                        "expression",
+                        "soulUrge"
+                      ]
+                    ]
                   }
                 },
                 "required": [
@@ -103016,7 +103101,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same number every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same number every time. Pass any unique identifier (userId, email hash, session token) to give each user their own number for the day. Without a seed every caller receives the same shared number of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -105621,7 +105706,29 @@
                     "type": "integer"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "fullName",
+                    "year",
+                    "month",
+                    "day"
+                  ],
+                  [
+                    "lifePath",
+                    "expression"
+                  ],
+                  [
+                    "lifePath",
+                    "fullName"
+                  ],
+                  [
+                    "expression",
+                    "year",
+                    "month",
+                    "day"
+                  ]
+                ]
               }
             }
           }
@@ -109169,7 +109276,7 @@
     },
     "/tarot/daily": {
       "post": {
-        "description": "Receive a single tarot card for daily guidance and reflection. This endpoint uses seeded randomness to ensure the same seed gets the same card on the same day, perfect for \"Card of the Day\" features. Provide a seed (userId, email hash, session token) for reproducible consistency, or omit for anonymous daily draws. Returns card with keywords, full meaning, and a daily message summary. Great for tarot apps, wellness platforms, morning ritual apps, and journaling tools.",
+        "description": "Receive a single tarot card for daily guidance and reflection. This endpoint uses seeded randomness to ensure the same seed gets the same card on the same day, perfect for \"Card of the Day\" features. Pass a seed (userId, email hash, session token) to give each user their own card for the day; without a seed every caller receives the same shared card of the day, which changes at midnight UTC. Returns card with keywords, full meaning, and a daily message summary. Great for tarot apps, wellness platforms, morning ritual apps, and journaling tools.",
         "operationId": "getDailyCard",
         "parameters": [
           {
@@ -109209,7 +109316,7 @@
                     "type": "string"
                   },
                   "seed": {
-                    "description": "Optional seed for reproducible readings. Same seed + same date = same card every time. Pass any unique identifier (userId, email hash, session token). Omit for anonymous daily readings.",
+                    "description": "Optional seed for reproducible readings. Same seed + same date = same card every time. Pass any unique identifier (userId, email hash, session token) to give each user their own card for the day. Without a seed every caller receives the same shared card of the day.",
                     "example": "user123",
                     "type": "string"
                   }
@@ -115195,13 +115302,40 @@
                         "type": "number"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "width",
+                        "depth"
+                      ],
+                      [
+                        "polygon"
+                      ]
+                    ]
                   }
                 },
                 "required": [
                   "plot"
                 ],
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "facing",
+                    "doorPosition"
+                  ],
+                  [
+                    "facing",
+                    "door"
+                  ],
+                  [
+                    "facingDegrees",
+                    "doorPosition"
+                  ],
+                  [
+                    "facingDegrees",
+                    "door"
+                  ]
+                ]
               }
             }
           }
@@ -115759,7 +115893,16 @@
                         "type": "number"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "width",
+                        "depth"
+                      ],
+                      [
+                        "polygon"
+                      ]
+                    ]
                   }
                 },
                 "required": [
@@ -116597,7 +116740,16 @@
                         "type": "number"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "width",
+                        "depth"
+                      ],
+                      [
+                        "polygon"
+                      ]
+                    ]
                   },
                   "road": {
                     "description": "Which side a road runs along. The verdict is convention: the chapter states no rule for the side a road is on, only that an obstruction facing the gate brings misery unless it lies beyond twice the height of the house.",
@@ -116658,7 +116810,15 @@
                 "required": [
                   "plot"
                 ],
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "facing"
+                  ],
+                  [
+                    "facingDegrees"
+                  ]
+                ]
               }
             }
           }
@@ -117690,7 +117850,16 @@
                         "type": "number"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-required-any-of": [
+                      [
+                        "width",
+                        "depth"
+                      ],
+                      [
+                        "polygon"
+                      ]
+                    ]
                   },
                   "rooms": {
                     "description": "The rooms to check, 1 to 24 of them. Each carries a type and either the quarter it sits in or its outline.",
@@ -117777,7 +117946,15 @@
                       "required": [
                         "type"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-required-any-of": [
+                        [
+                          "direction"
+                        ],
+                        [
+                          "polygon"
+                        ]
+                      ]
                     },
                     "maxItems": 24,
                     "minItems": 1,
@@ -117788,7 +117965,15 @@
                   "plot",
                   "rooms"
                 ],
-                "type": "object"
+                "type": "object",
+                "x-required-any-of": [
+                  [
+                    "facing"
+                  ],
+                  [
+                    "facingDegrees"
+                  ]
+                ]
               }
             }
           }

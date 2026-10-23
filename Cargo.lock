@@ -1185,7 +1185,7 @@ dependencies = [
 
 [[package]]
 name = "roxyapi"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "actix-web",
  "axum",
