@@ -5880,7 +5880,7 @@ pub struct KPSublordChangesResponseChangesItem {
     /// KP sublord planet before transition. The sublord determines whether an event signified by the star lord will manifest.
     #[serde(rename = "fromSublord")]
     pub from_sublord: String,
-    /// Sublord transition time (HH:MM, 24-hour): the instant is found to the second and shown to the minute it falls in. Adjusted to requested timezone.
+    /// Sublord transition time (HH:MM, 24-hour): the instant is found to the second and shown rounded to the nearest minute. Adjusted to requested timezone.
     pub time: String,
     /// New KP number (1-249) the planet enters. Each number maps to a unique star lord and sublord combination.
     #[serde(rename = "toKp")]
@@ -6253,7 +6253,7 @@ pub struct KPRasiChangesResponseChangesItem {
     /// Rashi lord (planetary ruler) of the departing sign. Determines the Vimshottari dasha connection.
     #[serde(rename = "fromSignLord")]
     pub from_sign_lord: String,
-    /// Ingress time (HH:MM, 24-hour): the instant is found to the second and shown to the minute it falls in. Adjusted to requested timezone.
+    /// Ingress time (HH:MM, 24-hour): the instant is found to the second and shown rounded to the nearest minute. Adjusted to requested timezone.
     pub time: String,
     /// New zodiac sign entered by the planet. Marks the beginning of a new transit phase in Vedic gochar analysis.
     #[serde(rename = "toSign")]
