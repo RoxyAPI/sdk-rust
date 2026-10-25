@@ -328,7 +328,7 @@ pub struct TransitsResponseTransitPlanetsItem {
     pub latitude: f64,
     /// Apparent geocentric tropical longitude on the true ecliptic of date, in degrees (0-360): light time and aberration applied, nutation included, the convention desktop chart software and the NASA JPL Horizons observer tables print, so it compares directly with either. Primary coordinate for sign and aspect calculation.
     pub longitude: f64,
-    /// Planet name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). Always English, whatever the lang parameter says, so it stays safe to compare against in code. Use nameLocalized for anything a reader sees. The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected.
+    /// Planet name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). Always English, whatever the lang parameter says, so it stays safe to compare against in code. Use nameLocalized for anything a reader sees. The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected. Black Moon Lilith is always the mean lunar apogee, whatever nodeType says. POST /lilith returns the mean and the true (osculating) apogee side by side, each labelled by its variant.
     pub name: String,
     /// Planet name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
@@ -2144,7 +2144,7 @@ pub struct NatalChartResponsePlanetsItem {
     pub latitude: f64,
     /// Apparent geocentric tropical longitude on the true ecliptic of date, in degrees (0-360): light time and aberration applied, nutation included, the convention desktop chart software and the NASA JPL Horizons observer tables print, so it compares directly with either.
     pub longitude: f64,
-    /// Planet or point name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). Always English, whatever the lang parameter says, so it stays safe to compare against in code. Use nameLocalized for anything a reader sees. The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected.
+    /// Planet or point name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). Always English, whatever the lang parameter says, so it stays safe to compare against in code. Use nameLocalized for anything a reader sees. The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected. Black Moon Lilith is always the mean lunar apogee, whatever nodeType says. POST /lilith returns the mean and the true (osculating) apogee side by side, each labelled by its variant.
     pub name: String,
     /// Planet or point name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
@@ -13076,7 +13076,7 @@ pub struct GetPlanetaryPositionsResponsePlanetsItem {
     pub latitude: f64,
     /// Apparent geocentric tropical longitude on the true ecliptic of date, in degrees (0-360): light time and aberration applied, nutation included, the convention desktop chart software and the NASA JPL Horizons observer tables print, so it compares directly with either.
     pub longitude: f64,
-    /// Planet name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected.
+    /// Planet name (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node, South Node, Chiron, Black Moon Lilith). The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected. Black Moon Lilith is always the mean lunar apogee, whatever nodeType says. POST /lilith returns the mean and the true (osculating) apogee side by side, each labelled by its variant.
     pub name: String,
     /// Tropical zodiac sign this planet occupies.
     pub sign: String,
