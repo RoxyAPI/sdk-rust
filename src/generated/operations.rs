@@ -6008,7 +6008,7 @@ impl AngelNumbers<'_> {
         self.0.send(request).await
     }
 }
-/// Timezone and location API with city search and geocoding across 235,000+ cities in 240+ countries, returning latitude, longitude, IANA timezone, and DST-aware UTC offset. Coverage goes down to towns of a few hundred people and every administrative seat, so a rural birthplace resolves as reliably as a capital. The location layer for birth chart forms, horoscope apps, event planners, and any feature that needs place-to-coordinates resolution. Fields map directly to the astrology endpoints, with no separate geocoding service to call or pay for. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
+/// Timezone and location API with city search and geocoding across 5,180,000+ cities, towns and villages in 240+ countries, returning latitude, longitude, IANA timezone, and DST-aware UTC offset. Coverage reaches every village on record, whatever its population, so a rural birthplace resolves as reliably as a capital. The location layer for birth chart forms, horoscope apps, event planners, and any feature that needs place-to-coordinates resolution. Fields map directly to the astrology endpoints, with no separate geocoding service to call or pay for. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
 #[derive(Debug, Clone, Copy)]
 pub struct Location<'a>(&'a Core);
 impl crate::Roxy {
@@ -6067,7 +6067,7 @@ impl Location<'_> {
     }
     /// Search cities worldwide - Geocoding autocomplete with coordinates and timezone
     ///
-    /// Turn a place name into coordinates, an IANA timezone and a DST-aware UTC offset, across 235,000+ cities and towns in 240+ countries. Coverage reaches rural towns of a few hundred people and every administrative seat, so a birthplace outside a major metro resolves as reliably as a capital. Matching is case-insensitive, accent-insensitive and partial, so ber matches Berlin, Bern and Bergen, native scripts are transliterated, and historic names resolve to the current place, so bombay returns Mumbai and peking returns Beijing. Results are ordered by match quality first and population second, so an exactly named small town is never buried under a larger city that merely shares its opening letters. Built for birth chart location pickers, horoscope apps, event scheduling, and any feature that needs place-to-coordinates resolution.
+    /// Turn a place name into coordinates, an IANA timezone and a DST-aware UTC offset, across 5,180,000+ cities, towns and villages in 240+ countries. Coverage reaches every village on record, whatever its population, so a birthplace outside a major metro resolves as reliably as a capital. Matching is case-insensitive, accent-insensitive and partial, so ber matches Berlin, Bern and Bergen, native scripts are transliterated, and historic names resolve to the current place, so bombay returns Mumbai and peking returns Beijing. A full name typed ranks above its smaller namesakes, a few letters reach the best-known city first, and a state, province or country in the query picks the right one of many places with the same name. A town name that matches nothing returns no match, never the largest town in the region it names. Built for birth chart location pickers, horoscope apps, event scheduling, and any feature that needs place-to-coordinates resolution.
     ///
     /// `GET /location/search`
     pub async fn search_cities(

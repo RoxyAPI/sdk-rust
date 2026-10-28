@@ -421,11 +421,11 @@ pub struct TransitsRequest {
     /// Transit time in HH:MM:SS format (defaults to current time)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
-    /// Transit timezone: decimal hours from UTC OR IANA name (e.g. "America/New_York"). IANA resolved to the DST-correct offset for the transit date. Defaults to 0 (UTC).
+    /// Transit timezone: decimal hours from UTC OR IANA name (e.g. "America/New_York"). IANA resolved to the DST-correct offset for the transit date. When `date` or `time` is omitted, the current moment is read in this zone, so `transitDate` and `transitTime` come back as its local clock. Defaults to 0 (UTC).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<TransitsRequestTimezone>,
 }
-/// Transit timezone: decimal hours from UTC OR IANA name (e.g. "America/New_York"). IANA resolved to the DST-correct offset for the transit date. Defaults to 0 (UTC).
+/// Transit timezone: decimal hours from UTC OR IANA name (e.g. "America/New_York"). IANA resolved to the DST-correct offset for the transit date. When `date` or `time` is omitted, the current moment is read in this zone, so `transitDate` and `transitTime` come back as its local clock. Defaults to 0 (UTC).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -858,7 +858,7 @@ pub struct SearchCitiesResponseCitiesItem {
     pub latitude: f64,
     /// Geographic longitude in decimal degrees (-180 to 180). Pass directly to astrology, horoscope, and panchang API endpoints alongside latitude.
     pub longitude: f64,
-    /// Population estimate for the place. Breaks ties between results of equal match quality, so among several places matching equally well the largest leads. It never outranks a better match, which is why a small town still wins when its name is typed exactly. May be 0 for a hamlet or administrative seat that carries no published figure.
+    /// Population estimate for the place. Weighs the ranking, so among places matching a query alike the larger leads, while a full name typed still outranks a namesake many times its size. 0 for a place with no published figure, as most villages are.
     pub population: f64,
     /// State, province, canton, or administrative region. Show it whenever more than one result comes back: it is what separates Richfield, Utah from Richfield, Minnesota, and the six US Springfields from each other. Empty for the small number of places with no administrative division recorded.
     pub province: String,
@@ -5143,7 +5143,7 @@ pub struct ListCountriesResponse {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct ListCountriesResponseCountriesItem {
-    /// Number of searchable places in this country, including small towns and administrative seats. Useful for showing coverage in a UI or sizing a dependent city dropdown.
+    /// Number of searchable places in this country, every town and village included. Useful for showing coverage in a UI or sizing a dependent city dropdown.
     #[serde(rename = "cityCount")]
     pub city_count: f64,
     /// ISO 3166-1 alpha-2 country code. Use as the identifier when fetching cities for a specific country via the /countries/{iso2} endpoint.
@@ -18709,7 +18709,7 @@ pub struct GetCurrentMoonPhaseParams {
     /// Time in 24-hour HH:MM:SS format. Defaults to 12:00:00 (noon). Moon moves ~13 degrees per day so time affects phase precision.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
-    /// IANA name (e.g. "America/New_York", "Europe/London"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00"). IANA resolved to the DST-correct offset for the given date. Defaults to 0 (UTC).
+    /// IANA name (e.g. "America/New_York", "Europe/London"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00"). IANA resolved to the DST-correct offset for the given date. With `date` omitted, today is the date in this zone. Defaults to 0 (UTC).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
 }
@@ -20227,7 +20227,7 @@ pub struct GetCitiesByCountryResponseCitiesItem {
     pub latitude: f64,
     /// Geographic longitude in decimal degrees (-180 to 180). Pass directly to astrology, horoscope, and panchang API endpoints alongside latitude.
     pub longitude: f64,
-    /// Population estimate for the place. Breaks ties between results of equal match quality, so among several places matching equally well the largest leads. It never outranks a better match, which is why a small town still wins when its name is typed exactly. May be 0 for a hamlet or administrative seat that carries no published figure.
+    /// Population estimate for the place. Weighs the ranking, so among places matching a query alike the larger leads, while a full name typed still outranks a namesake many times its size. 0 for a place with no published figure, as most villages are.
     pub population: f64,
     /// State, province, canton, or administrative region. Show it whenever more than one result comes back: it is what separates Richfield, Utah from Richfield, Minnesota, and the six US Springfields from each other. Empty for the small number of places with no administrative division recorded.
     pub province: String,
