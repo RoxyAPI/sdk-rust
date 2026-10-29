@@ -137,6 +137,13 @@ pub fn every_enum_value() -> usize {
         >(&["mean", "true"], types::ProgressionsRequestNodeType::Other);
     count
         += check::<
+            types::ProgressionsRequestHouseSystem,
+        >(
+            &["placidus", "whole-sign", "equal", "koch"],
+            types::ProgressionsRequestHouseSystem::Other,
+        );
+    count
+        += check::<
             types::ProfectionsRequestNodeType,
         >(&["mean", "true"], types::ProfectionsRequestNodeType::Other);
     count

@@ -1,6 +1,6 @@
 [package]
 name = "roxyapi"
-version = "2.0.4"
+version = "2.1.0"
 edition = "2024"
 rust-version = "1.88"
 description = "Astrology API SDK for Rust: Western and Vedic charts, tarot, numerology and Human Design. Async typed access to RoxyAPI insight data."

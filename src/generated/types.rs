@@ -1286,7 +1286,7 @@ pub struct ProgressionsResponse {
 pub struct ProgressionsResponsePlanetsItem {
     /// Degree of the progressed body within its zodiac sign (0 to 29.999).
     pub degree: f64,
-    /// Whole-sign house (1 to 12) counted from the progressed Ascendant sign. The 1st house is the entire sign the progressed Ascendant falls in.
+    /// Natal house (1 to 12) the progressed body occupies, read against the natal cusps in the requested houseSystem, the same house number POST /natal-chart gives a body at this longitude. Natal houses are the standard frame for reading progressed planets, the progressed Moon through the houses above all.
     pub house: i64,
     /// Plain language meaning of this progressed body in its sign, suitable for chart reports and AI agents. Localized to the requested language.
     pub interpretation: String,
@@ -1357,6 +1357,9 @@ pub struct ProgressionsResponseAscendant {
 pub struct ProgressionsRequest {
     /// Birth date in YYYY-MM-DD format. Determines planetary positions for the specific calendar day.
     pub date: String,
+    /// House system of the natal chart that every progressed body is placed in. Pass the system the natal chart was drawn in so the house numbers match it. Placidus (default) is the most widely used in Western astrology. Whole Sign assigns one sign per house. Equal divides into 30 degree segments from the Ascendant. Koch emphasizes higher latitudes. Quadrant systems fall back to Whole Sign above the polar circle.
+    #[serde(rename = "houseSystem", skip_serializing_if = "Option::is_none")]
+    pub house_system: Option<ProgressionsRequestHouseSystem>,
     /// Birth location latitude in decimal degrees (-90 to 90). Positive = North, negative = South.
     pub latitude: f64,
     /// Birth location longitude in decimal degrees (-180 to 180). Positive = East, negative = West.
@@ -1387,6 +1390,15 @@ string_enum! {
     ProgressionsRequestNodeType {
         Mean = "mean",
         TrueValue = "true",
+    }
+}
+string_enum! {
+    /// House system of the natal chart that every progressed body is placed in. Pass the system the natal chart was drawn in so the house numbers match it. Placidus (default) is the most widely used in Western astrology. Whole Sign assigns one sign per house. Equal divides into 30 degree segments from the Ascendant. Koch emphasizes higher latitudes. Quadrant systems fall back to Whole Sign above the polar circle.
+    ProgressionsRequestHouseSystem {
+        Placidus = "placidus",
+        WholeSign = "whole-sign",
+        Equal = "equal",
+        Koch = "koch",
     }
 }
 /// Response body of `generateProfections`.
@@ -5630,7 +5642,7 @@ pub struct LilithResponse {
     /// Echo of the birth moment and place used to compute both Lilith variants.
     #[serde(rename = "birthDetails")]
     pub birth_details: LilithResponseBirthDetails,
-    /// House system applied when placing each variant in a house.
+    /// House system actually applied when placing each variant in a house. Differs from the requested system only above the polar circle, where quadrant systems fall back to Whole Sign.
     #[serde(rename = "houseSystem")]
     pub house_system: LilithResponseHouseSystem,
     /// Both Black Moon Lilith variants, the mean lunar apogee first and the true (osculating) apogee second.
@@ -5675,7 +5687,7 @@ string_enum! {
     }
 }
 string_enum! {
-    /// House system applied when placing each variant in a house.
+    /// House system actually applied when placing each variant in a house. Differs from the requested system only above the polar circle, where quadrant systems fall back to Whole Sign.
     LilithResponseHouseSystem {
         Placidus = "placidus",
         WholeSign = "whole-sign",
@@ -5704,7 +5716,7 @@ pub struct LilithResponseBirthDetails {
 pub struct LilithRequest {
     /// Birth date in YYYY-MM-DD format. Determines planetary positions for the specific calendar day.
     pub date: String,
-    /// House system used to place each Lilith variant in a house. Placidus (default), Whole Sign, Equal, or Koch.
+    /// House system used to place each Lilith variant in a house. Placidus (default), Whole Sign, Equal, or Koch. Above the polar circle, quadrant systems fall back to Whole Sign and the echoed houseSystem reports the system actually used.
     #[serde(rename = "houseSystem", skip_serializing_if = "Option::is_none")]
     pub house_system: Option<LilithRequestHouseSystem>,
     /// Birth location latitude in decimal degrees (-90 to 90). Positive = North, negative = South.
@@ -5737,7 +5749,7 @@ string_enum! {
     }
 }
 string_enum! {
-    /// House system used to place each Lilith variant in a house. Placidus (default), Whole Sign, Equal, or Koch.
+    /// House system used to place each Lilith variant in a house. Placidus (default), Whole Sign, Equal, or Koch. Above the polar circle, quadrant systems fall back to Whole Sign and the echoed houseSystem reports the system actually used.
     LilithRequestHouseSystem {
         Placidus = "placidus",
         WholeSign = "whole-sign",
@@ -6381,7 +6393,7 @@ pub struct KPPlanetsRequest {
     pub ayanamsa_value: Option<f64>,
     /// Birth date in YYYY-MM-DD format
     pub date: String,
-    /// Birth location latitude in decimal degrees
+    /// Birth location latitude in decimal degrees. Accepted at any latitude, polar included: planet longitudes are geocentric and the star and sub lords are divisions of longitude, so no house cusp is involved.
     pub latitude: f64,
     /// Birth location longitude in decimal degrees
     pub longitude: f64,
@@ -6786,7 +6798,7 @@ pub struct KPHoraryRequest {
     /// Horary number from 1 to 249, given by the querent while focused on their question. It maps to one of the 249 KP sub divisions of the zodiac, and that division sets the Ascendant of the chart. The querent should give the first number that comes to mind and use it once for that question; the astrologer never chooses it. Numbers outside 1 to 249 are rejected rather than wrapped, because a wrapped number would silently answer a different question.
     #[serde(rename = "horaryNumber")]
     pub horary_number: i64,
-    /// Latitude where the question is judged, decimal degrees. The house cusps are Placidus and therefore latitude dependent, so this is the place of judgment, not the querent birthplace.
+    /// Latitude where the question is judged, decimal degrees. The house cusps are Placidus and therefore latitude dependent, so this is the place of judgment, not the querent birthplace. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     pub latitude: f64,
     /// Longitude where the question is judged, decimal degrees.
     pub longitude: f64,
@@ -7233,7 +7245,7 @@ pub struct KPDailyFinanceRequest {
     /// Houses whose significators count as gain, 1 to 12. Defaults to the convention, 2 and 11. Override it to run your own school: the two lists may not share a house.
     #[serde(rename = "gainHouses", skip_serializing_if = "Option::is_none")]
     pub gain_houses: Option<Vec<i64>>,
-    /// Birth latitude in decimal degrees. Sets the Placidus cusps; also the place the ruling planets and the Moon windows are read at.
+    /// Birth latitude in decimal degrees. Sets the Placidus cusps; also the place the ruling planets and the Moon windows are read at. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     pub latitude: f64,
     /// Birth longitude in decimal degrees, east positive.
     pub longitude: f64,
@@ -7246,7 +7258,7 @@ pub struct KPDailyFinanceRequest {
     /// Reading moment on that date, HH:MM:SS local. The ruling planets and the running sookshma lord are read at this instant. Defaults to 12:00:00; pass a market open or any hour for an intraday read.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
-    /// Timezone as an IANA name (Asia/Kolkata) or decimal hours from UTC. Applies to the birth time, to the reading date and time, and to every local timestamp in the response. IANA names resolve to the offset in force on the date being read.
+    /// Timezone as an IANA name (Asia/Kolkata) or decimal hours from UTC. Applies to the birth time, to the reading date and time, and to every local timestamp in the response. An IANA name is resolved twice, each to the offset in force at its own moment: at the birth date and time for the natal chart, and on the date being read for the reading. A decimal is applied to both as sent.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<KPDailyFinanceRequestTimezone>,
     /// Layer weights in percent, all four required, summing to 100. Defaults to the convention, cusps 30, dasha 40, rulingPlanets 15, moonWindows 15. Seventy percent of the default sits on the cusps and the outer dasha levels, which hold for months, so a chart reads inside a narrow band all month and the bands separate charts more than days. Move weight onto rulingPlanets and moonWindows for a reading that turns with the day.
@@ -7268,7 +7280,7 @@ pub struct KPDailyFinanceRequestWeights {
     #[serde(rename = "rulingPlanets")]
     pub ruling_planets: f64,
 }
-/// Timezone as an IANA name (Asia/Kolkata) or decimal hours from UTC. Applies to the birth time, to the reading date and time, and to every local timestamp in the response. IANA names resolve to the offset in force on the date being read.
+/// Timezone as an IANA name (Asia/Kolkata) or decimal hours from UTC. Applies to the birth time, to the reading date and time, and to every local timestamp in the response. An IANA name is resolved twice, each to the offset in force at its own moment: at the birth date and time for the natal chart, and on the date being read for the reading. A decimal is applied to both as sent.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -7371,7 +7383,7 @@ pub struct KPCuspsRequest {
     pub ayanamsa_value: Option<f64>,
     /// Birth date in YYYY-MM-DD format
     pub date: String,
-    /// Birth location latitude in decimal degrees
+    /// Birth location latitude in decimal degrees. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     pub latitude: f64,
     /// Birth location longitude in decimal degrees
     pub longitude: f64,
@@ -7697,7 +7709,7 @@ pub struct KPChartRequest {
     pub ayanamsa_value: Option<f64>,
     /// Birth date in YYYY-MM-DD format
     pub date: String,
-    /// Birth location latitude in decimal degrees
+    /// Birth location latitude in decimal degrees. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     pub latitude: f64,
     /// Birth location longitude in decimal degrees
     pub longitude: f64,
@@ -7852,7 +7864,7 @@ pub struct HeliacalResponseGrahasItem {
     /// The event that produced the current state, or null when none falls inside the search horizon (up to about one synodic period, so Mars can legitimately have none).
     #[serde(rename = "lastEvent")]
     pub last_event: Option<HeliacalResponseGrahasItemLastEvent>,
-    /// Plain angular separation of the two ecliptic longitudes, in degrees. Returned beside timeDegrees so the two measures can be compared: this is what a combustion flag on a birth chart uses, and the gap between them is precisely what a location-aware heliacal calculation adds.
+    /// Plain angular separation of the two ecliptic longitudes, in degrees, read at the same instant as timeDegrees: the Sun crossing the horizon named in `horizon` on the requested day, sunset for west and sunrise for east, at the observer location. Returned beside timeDegrees so the two measures can be compared: this is the quantity a combustion flag on a birth chart uses, and the gap between them is precisely what a location-aware heliacal calculation adds. A birth chart reads it at the birth moment instead, so the two differ by however far the graha and the Sun moved in between, about half a degree per hour for the Moon.
     #[serde(rename = "longitudeSeparation")]
     pub longitude_separation: f64,
     /// The event that will end the current state, or null when none falls inside the search horizon. For an invisible graha this is the udaya a practitioner is waiting for, so it answers when Guru Asta or Shukra Asta lifts.
@@ -9888,11 +9900,11 @@ pub struct GetVedicDailyReadingRequest {
     /// Lunar node type for Rahu and Ketu. "mean" uses the smooth mean node, which is the traditional Vedic default and what printed panchangs use. "true" uses the osculating node, which swings up to 1.5 degrees either side of mean and can therefore move a node into a different rashi and change its gochara house. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetVedicDailyReadingRequestNodeType>,
-    /// Timezone: IANA name (e.g. "Asia/Kolkata", "America/New_York") OR decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). IANA strings are resolved to the DST-correct offset for the date being read. Interprets the birth time and the civil date below. Defaults to 5.5.
+    /// Timezone: IANA name (e.g. "Asia/Kolkata", "America/New_York") OR decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). IANA strings are resolved twice, each to the DST-correct offset of its own moment: at the birth date and time for the birth chart, and on the date being read for the reading day. A decimal is applied to both as sent. Defaults to 5.5.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<GetVedicDailyReadingRequestTimezone>,
 }
-/// Timezone: IANA name (e.g. "Asia/Kolkata", "America/New_York") OR decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). IANA strings are resolved to the DST-correct offset for the date being read. Interprets the birth time and the civil date below. Defaults to 5.5.
+/// Timezone: IANA name (e.g. "Asia/Kolkata", "America/New_York") OR decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). IANA strings are resolved twice, each to the DST-correct offset of its own moment: at the birth date and time for the birth chart, and on the date being read for the reading day. A decimal is applied to both as sent. Defaults to 5.5.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -10540,7 +10552,7 @@ pub struct GetSubDashasRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetSubDashasRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -11048,7 +11060,7 @@ pub struct GetSookshmaDashasRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetSookshmaDashasRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -12341,7 +12353,7 @@ pub struct GetPratyantardashasRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetPratyantardashasRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -12914,7 +12926,7 @@ pub struct GetPranaDashasRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetPranaDashasRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -15296,7 +15308,7 @@ pub struct GetMajorDashasRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetMajorDashasRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -15568,18 +15580,18 @@ pub struct GetKpRulingPlanetsRequest {
     /// ISO 8601 datetime (YYYY-MM-DDTHH:MM:SS) for ruling planets. Defaults to current time. Interpreted as local time when a non-zero timezone is provided (a trailing Z is accepted but ignored); with timezone 0 it is UTC.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datetime: Option<String>,
-    /// Observer latitude in decimal degrees
+    /// Observer latitude in decimal degrees. Any latitude for the ruling planets alone; with birthDate and birthTime the significators read Placidus cusps, so the latitude must lie below 66.56 degrees north or south and a polar latitude returns 400.
     pub latitude: f64,
     /// Observer longitude in decimal degrees
     pub longitude: f64,
     /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the Rahu and Ketu positions. Mean is the traditional Vedic default and what printed panchangs use; the choice can move a KP sub-lord in narrow boundary cases, where a span can be as small as 0.5 degrees. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetKpRulingPlanetsRequestNodeType>,
-    /// Timezone: IANA name (e.g. "America/New_York", "Europe/London") OR decimal hours from UTC. IANA resolved to the DST-correct offset based on birthDate or datetime. Defaults to 5.5.
+    /// Timezone: IANA name (e.g. "America/New_York", "Europe/London") OR decimal hours from UTC. An IANA name is resolved to the DST-correct offset of each moment separately: at datetime for the ruling planets, and at birthDate and birthTime for the significators. A decimal is applied to both as sent. Defaults to 5.5.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<GetKpRulingPlanetsRequestTimezone>,
 }
-/// Timezone: IANA name (e.g. "America/New_York", "Europe/London") OR decimal hours from UTC. IANA resolved to the DST-correct offset based on birthDate or datetime. Defaults to 5.5.
+/// Timezone: IANA name (e.g. "America/New_York", "Europe/London") OR decimal hours from UTC. An IANA name is resolved to the DST-correct offset of each moment separately: at datetime for the ruling planets, and at birthDate and birthTime for the significators. A decimal is applied to both as sent. Defaults to 5.5.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -15642,7 +15654,7 @@ pub struct GetKpRulingIntervalRequest {
     /// Interval between calculations in minutes (1-1440). Use 1-5 for birth time rectification.
     #[serde(rename = "intervalMinutes")]
     pub interval_minutes: i64,
-    /// Observer latitude in decimal degrees
+    /// Observer latitude in decimal degrees. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     pub latitude: f64,
     /// Observer longitude in decimal degrees
     pub longitude: f64,
@@ -19628,7 +19640,7 @@ pub struct GetCurrentDashaRequest {
     pub ayanamsa_value: Option<f64>,
     /// Birth date in YYYY-MM-DD format. Date determines planetary positions and nakshatra calculations for Vedic kundli (janam patri). Accurate birth date is essential for dashas, yoga calculations, and divisional charts (vargas).
     pub date: String,
-    /// ISO 8601 datetime (YYYY-MM-DDTHH:MM:SS) to read the running periods at, for a reading prepared for a future day, a backtest, or a chart cast for a past moment. Defaults to the current instant. Interpreted as local time in the request timezone (a trailing Z is accepted but ignored); with timezone 0 it is UTC.
+    /// ISO 8601 datetime (YYYY-MM-DDTHH:MM:SS) to read the running periods at, for a reading prepared for a future day, a backtest, or a chart cast for a past moment. Defaults to the current instant. Interpreted as local time in the request timezone, an IANA name resolved at this datetime rather than at the birth (a trailing Z is accepted but ignored); with timezone 0 it is UTC.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datetime: Option<String>,
     /// Birth location latitude in decimal degrees. Location determines local sidereal time for Lagna calculation and affects bhava (house) cusps. Example: Delhi 28.6139, Mumbai 19.0760, Kathmandu 27.7172.
@@ -19638,7 +19650,7 @@ pub struct GetCurrentDashaRequest {
     /// Lunar node type for Rahu and Ketu, used ONLY when "significators" is true. Dasha dates themselves come from the Moon and never move with this field. "mean" uses the smooth mean node (traditional default). "true" uses the osculating node, which swings up to 1.5 degrees either side of mean over a 173-day cycle and can therefore change which house or star a node falls in. Defaults to "mean".
     #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
     pub node_type: Option<GetCurrentDashaRequestNodeType>,
-    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above.
+    /// Set true to attach the KP significators of each period lord: its star lord, sub lord, occupied house, the houses it signifies at levels L1 to L4, and a strength grade. Off by default, so responses stay exactly as they are for clients that only need dates. Requires the birth latitude and longitude, since significators are read off a Placidus house chart, and uses the same ayanamsa frame selected above. The latitude must lie below 66.56 degrees north or south, inside the polar circles: KP cusps are Placidus, which has no solution beyond them, so a polar latitude returns 400.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub significators: Option<bool>,
     /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
@@ -22658,10 +22670,10 @@ pub struct GenerateNumerologyChartResponseMaturityStatus {
     /// Age range when the Maturity number typically activates (35-40).
     #[serde(rename = "activationRange")]
     pub activation_range: String,
-    /// The current UTC calendar year minus the birth year. The birthday is not considered, so before the birthday it reads one more than the age in whole years, and currentYear does not move it.
+    /// Age in completed years on targetDate, or on the current UTC date when targetDate is omitted: the birth year subtracted, less one until the birthday has come round. A 29 February birthday comes round on 1 March in a common year. currentYear does not move it.
     #[serde(rename = "currentAge")]
     pub current_age: f64,
-    /// Whether the Maturity number is currently active (typically activates around age 35-40).
+    /// Whether the Maturity number is currently active: true from the 35th birthday, when currentAge reaches 35 (the number typically activates around age 35-40).
     #[serde(rename = "isActive")]
     pub is_active: bool,
 }
@@ -23098,7 +23110,7 @@ pub struct GenerateNumerologyChartResponseAdditionalInsightsPersonalYear {
     pub forecast: String,
     /// Key opportunities available during this Personal Year. Each entry identifies a specific area of life where conditions are favorable for growth and forward momentum.
     pub opportunities: Vec<String>,
-    /// Personal Month forecast for the current UTC calendar month, applied to the Personal Year above. With a currentYear other than the current year, it pairs that Personal Year with the current month.
+    /// Personal Month forecast for the calendar month of targetDate (the current UTC month when omitted), applied to the Personal Year above. With a currentYear other than the year of targetDate, it pairs that Personal Year with this month.
     #[serde(rename = "personalMonth")]
     pub personal_month: GenerateNumerologyChartResponseAdditionalInsightsPersonalYearPersonalMonth,
     /// Personal Year number (1-9). Each year in the 9-year cycle has distinct themes and energies.
@@ -23107,13 +23119,13 @@ pub struct GenerateNumerologyChartResponseAdditionalInsightsPersonalYear {
     /// Central theme and energy defining this Personal Year. Provides a one-line summary of the dominant vibration influencing all areas of life.
     pub theme: String,
 }
-/// Personal Month forecast for the current UTC calendar month, applied to the Personal Year above. With a currentYear other than the current year, it pairs that Personal Year with the current month.
+/// Personal Month forecast for the calendar month of targetDate (the current UTC month when omitted), applied to the Personal Year above. With a currentYear other than the year of targetDate, it pairs that Personal Year with this month.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GenerateNumerologyChartResponseAdditionalInsightsPersonalYearPersonalMonth {
     /// Practical focus and guidance for this month.
     pub focus: String,
-    /// Personal Month number (1-9): the Personal Year above plus the current UTC calendar month, reduced to one digit.
+    /// Personal Month number (1-9): the Personal Year above plus the calendar month of targetDate (the current UTC month when omitted), reduced to one digit.
     #[serde(rename = "personalMonth")]
     pub personal_month: f64,
     /// Central theme for this Personal Month.
@@ -25964,7 +25976,7 @@ pub struct GenerateBirthProfileResponse {
     pub birth_data: GenerateBirthProfileResponseBirthData,
     /// The conventions this answer was computed under, echoed so it can be reproduced.
     pub conventions: GenerateBirthProfileResponseConventions,
-    /// The next Hebrew birthday. Three Hebrew dates are missing from some years, and where the anniversary moves to is a matter of community practice rather than arithmetic, so the field is null with a note rather than a guess.
+    /// The next Hebrew birthday from targetDate (the current UTC date when omitted), the anniversary of hebrewDate. Three Hebrew dates are missing from some years, and where the anniversary moves to is a matter of community practice rather than arithmetic, so the field is null with a note rather than a guess.
     #[serde(rename = "hebrewBirthday")]
     pub hebrew_birthday: GenerateBirthProfileResponseHebrewBirthday,
     /// The Hebrew date of the birth.
@@ -26012,13 +26024,13 @@ pub struct GenerateBirthProfileResponseHebrewDate {
     /// Hebrew year.
     pub year: f64,
 }
-/// The next Hebrew birthday. Three Hebrew dates are missing from some years, and where the anniversary moves to is a matter of community practice rather than arithmetic, so the field is null with a note rather than a guess.
+/// The next Hebrew birthday from targetDate (the current UTC date when omitted), the anniversary of hebrewDate. Three Hebrew dates are missing from some years, and where the anniversary moves to is a matter of community practice rather than arithmetic, so the field is null with a note rather than a guess.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GenerateBirthProfileResponseHebrewBirthday {
-    /// The next Gregorian date the Hebrew birthday falls on, or null when that Hebrew date does not exist in the year it would fall in.
+    /// The Gregorian date of the next Hebrew birthday on or after targetDate, or the current UTC date when targetDate is omitted (that day when it is the birthday), or null when that Hebrew date does not exist in the year it falls in. It is the daytime civil date: the Hebrew day itself opens at nightfall the evening before.
     pub date: Option<String>,
-    /// The Hebrew year the anniversary was looked for in.
+    /// The Hebrew year of that next anniversary, always later than the birth year. Present on the null branch too, naming the year the date is missing from.
     #[serde(rename = "hebrewYear")]
     pub hebrew_year: f64,
     /// Present only when the date is null, saying why. Absent otherwise, so a caller can branch on presence.
@@ -26090,6 +26102,9 @@ pub struct GenerateBirthProfileRequest {
     /// Where 29 February falls. The civil wheel was built for a 365 day year and has no slot for it, so published tables differ: extend-previous reads the day as part of the period ending 28 February, next-angel reads it as the opening of the period starting 1 March. Ignored when angelDating is solar-longitude.
     #[serde(rename = "leapDayPolicy", skip_serializing_if = "Option::is_none")]
     pub leap_day_policy: Option<GenerateBirthProfileRequestLeapDayPolicy>,
+    /// Date to count the next Hebrew birthday from, in YYYY-MM-DD format. Send the local date of the user for an exact answer: on the birthday itself the answer is that day. Defaults to today (UTC).
+    #[serde(rename = "targetDate", skip_serializing_if = "Option::is_none")]
+    pub target_date: Option<String>,
     /// Birth time in HH:MM:SS local to the timezone field. Defaults to noon when omitted, which is stated because the name read from the hour changes every twenty minutes and a defaulted time cannot be precise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
@@ -27164,7 +27179,7 @@ pub struct FixedStarsResponse {
     pub orb: f64,
     /// Every catalog star with its precessed tropical position, magnitude, traditional nature, and any conjunctions to the natal chart.
     pub stars: Vec<FixedStarsResponseStarsItem>,
-    /// Short overview of the fixed-star report for previews and report intros.
+    /// Short overview of the fixed-star report for previews and report intros: the number of conjunctions inside the orb and the tightest one found, or a plain statement that no star touches the chart. Localized to the requested language.
     pub summary: String,
 }
 /// One entry of `stars`.
@@ -30059,7 +30074,7 @@ pub struct CalculateTransitRequest {
     pub latitude: f64,
     /// Observer longitude in decimal degrees. Affects local sidereal time for Lagna and house calculations.
     pub longitude: f64,
-    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5 (IST).
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. The birth moment and the transit moment are each resolved at their own date and time. Defaults to 5.5 (IST).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<CalculateTransitRequestTimezone>,
     /// Transit date to analyze in YYYY-MM-DD format. Planetary positions on this date are overlaid on the natal chart.
@@ -30069,7 +30084,7 @@ pub struct CalculateTransitRequest {
     #[serde(rename = "transitTime", skip_serializing_if = "Option::is_none")]
     pub transit_time: Option<String>,
 }
-/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5 (IST).
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. The birth moment and the transit moment are each resolved at their own date and time. Defaults to 5.5 (IST).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -33053,7 +33068,7 @@ pub struct CalculateLuckPillarsResponse {
     /// Age in whole years at which the first luck pillar begins. Counted from the birth instant to the adjacent minor solar term at three days to the year, forward for a forward direction and backward for a reverse one.
     #[serde(rename = "startAge")]
     pub start_age: f64,
-    /// Additional months past startAge, 0 to 11, from the remainder of the same count at one day to four months. Calculators that round the whole count to the nearest year will differ from this by up to six months.
+    /// Additional months past startAge, 0 to 11, from the remainder of the same count at one day to four months, rounded once to the nearest month. Calculators that round the whole count to the nearest year will differ from this by up to six months.
     #[serde(rename = "startAgeMonths")]
     pub start_age_months: f64,
     /// One-paragraph reading of the sequence direction and its start.
@@ -33068,7 +33083,7 @@ pub struct CalculateLuckPillarsResponseLuckPillarsItem {
     /// Age in whole years at which this period ends and the next one begins.
     #[serde(rename = "endAge")]
     pub end_age: f64,
-    /// Gregorian year this period ends.
+    /// Gregorian year this period ends and the next one begins, startYear plus ten.
     #[serde(rename = "endYear")]
     pub end_year: f64,
     /// Pillar identifier, the stem id and the branch id joined by a hyphen.
@@ -33080,7 +33095,7 @@ pub struct CalculateLuckPillarsResponseLuckPillarsItem {
     /// Age in whole years at which this ten-year period begins.
     #[serde(rename = "startAge")]
     pub start_age: f64,
-    /// Gregorian year this period begins, the birth year plus startAge.
+    /// Gregorian year this period begins: the year of the date that falls startAge years and startAgeMonths months after the birth date, plus ten for each later period. A birth in November with a start of 4 years 7 months begins its first period in June of the birth year plus five.
     #[serde(rename = "startYear")]
     pub start_year: f64,
     /// The Heavenly Stem of this luck pillar, with its element and polarity.
@@ -33210,7 +33225,7 @@ pub struct CalculateLuckPillarsResponseBirthData {
 pub struct CalculateLuckPillarsResponseAnnualPillarsItem {
     /// Annual pillar identifier for that year, under the year boundary applied.
     pub id: String,
-    /// Which returned luck pillar this year falls inside, by its index. 0 means the year falls before the first luck pillar begins, in the stretch still governed by the natal chart alone.
+    /// Which returned luck pillar this year falls inside, by its index. The year a period begins in counts as inside it, though the handover falls in a month of that year. 0 means the year falls before the first luck pillar begins, in the stretch still governed by the natal chart alone.
     #[serde(rename = "luckPillarIndex")]
     pub luck_pillar_index: f64,
     /// Position of the annual pillar in the sexagenary cycle, 1 to 60.
@@ -37926,7 +37941,7 @@ pub struct BirthChartResponse {
     pub taurus: BirthChartResponseTaurus,
     /// The `virgo` field.
     pub virgo: BirthChartResponseVirgo,
-    /// Forty-four classical yogas detected against this chart. Twelve conjunction and dignity yogas: Gajakesari (three-rule parashara definition), Sunapha, Anapha, Dhurdhura, Kemadruma, Chandra Mangala, Budha-Aditya, and the five Pancha Mahapurusha (Ruchaka, Bhadra, Hamsa, Malavya, Sasa). Plus all 32 Nabhasa distribution yogas across the Asraya, Dala, Akriti and Sankhya families, which read how the seven visible grahas are spread over the whole chart rather than any single conjunction, and which apply the four classical precedence norms so an outranked yoga is returned as absent with evidence naming the norm that silenced it. Each entry carries an `id` (matches `GET /yoga/{id}` for full glossary lookup), a `present` boolean, a `quality` (Positive, Negative, or Both = auspicious, inauspicious, or context-dependent), and classical-text `evidence` for the rule that triggered or failed. Filter on `present === true` for the active list.
+    /// Forty-eight classical yogas detected against this chart. Twelve conjunction and dignity yogas: Gajakesari (three-rule parashara definition), Sunapha, Anapha, Dhurdhura, Kemadruma, Chandra Mangala, Budha-Aditya, and the five Pancha Mahapurusha (Ruchaka, Bhadra, Hamsa, Malavya, Sasa). Plus all 32 Nabhasa distribution yogas across the Asraya, Dala, Akriti and Sankhya families, which read how the seven visible grahas are spread over the whole chart rather than any single conjunction, and which apply the four classical precedence norms so an outranked yoga is returned as absent with evidence naming the norm that silenced it. Plus the four wealth and poverty verdicts (Dhana, Daridra, Lakshmi, Dhana Malika), each reading as the first rule that matched. Each entry carries an `id` (matches `GET /yoga/{id}` for full glossary lookup), a `present` boolean, a `quality` (Positive, Negative, or Both = auspicious, inauspicious, or context-dependent), and classical-text `evidence` for the rule that triggered or failed. Filter on `present === true` for the active list.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub yogas: Option<Vec<BirthChartResponseYogasItem>>,
 }
@@ -41363,7 +41378,7 @@ pub struct DrawCardsRequest {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GenerateNumerologyChartRequest {
-    /// Calendar year for the Personal Year, defaults to the current UTC year. It moves the Personal Year only: the nested personalMonth and maturityStatus.currentAge always read the current UTC date.
+    /// Calendar year for the Personal Year. When omitted it is the year of targetDate, or of the current UTC date when targetDate is omitted too. It moves the Personal Year only: the nested personalMonth and maturityStatus.currentAge read targetDate.
     #[serde(rename = "currentYear", skip_serializing_if = "Option::is_none")]
     pub current_year: Option<i64>,
     /// Birth day (1-31)
@@ -41373,6 +41388,9 @@ pub struct GenerateNumerologyChartRequest {
     pub full_name: String,
     /// Birth month (1-12)
     pub month: i64,
+    /// Date to read the chart on, in YYYY-MM-DD format, in the years 100 to 2100, on or after the birth date. Send the local date of the user for an exact answer: it sets maturityStatus.currentAge and isActive, the Personal Month, and the Personal Year when currentYear is absent. Defaults to today (UTC).
+    #[serde(rename = "targetDate", skip_serializing_if = "Option::is_none")]
+    pub target_date: Option<String>,
     /// Birth year between 100 and 2100. Supports historical figures like Einstein (1879) and Shakespeare (1564).
     pub year: i64,
 }
@@ -42149,6 +42167,7 @@ impl ProgressionsRequest {
     ) -> Self {
         Self {
             date,
+            house_system: Default::default(),
             latitude,
             longitude,
             node_type: Default::default(),
@@ -42156,6 +42175,12 @@ impl ProgressionsRequest {
             time,
             timezone,
         }
+    }
+    /// Sets `houseSystem`.
+    #[must_use]
+    pub fn with_house_system(mut self, value: ProgressionsRequestHouseSystem) -> Self {
+        self.house_system = Some(value);
+        self
     }
     /// Sets `nodeType`.
     #[must_use]
@@ -47299,6 +47324,7 @@ impl GenerateBirthProfileRequest {
             angel_dating: Default::default(),
             date,
             leap_day_policy: Default::default(),
+            target_date: Default::default(),
             time: Default::default(),
             timezone,
             year_start: Default::default(),
@@ -47326,6 +47352,12 @@ impl GenerateBirthProfileRequest {
         value: GenerateBirthProfileRequestLeapDayPolicy,
     ) -> Self {
         self.leap_day_policy = Some(value);
+        self
+    }
+    /// Sets `targetDate`.
+    #[must_use]
+    pub fn with_target_date(mut self, value: String) -> Self {
+        self.target_date = Some(value);
         self
     }
     /// Sets `time`.
@@ -51582,6 +51614,7 @@ impl GenerateNumerologyChartRequest {
             day,
             full_name,
             month,
+            target_date: Default::default(),
             year,
         }
     }
@@ -51589,6 +51622,12 @@ impl GenerateNumerologyChartRequest {
     #[must_use]
     pub fn with_current_year(mut self, value: i64) -> Self {
         self.current_year = Some(value);
+        self
+    }
+    /// Sets `targetDate`.
+    #[must_use]
+    pub fn with_target_date(mut self, value: String) -> Self {
+        self.target_date = Some(value);
         self
     }
 }
