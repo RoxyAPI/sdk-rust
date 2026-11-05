@@ -6111,6 +6111,194 @@ impl Usage<'_> {
         self.0.send(request).await
     }
 }
+/// Branded reports built from the API: a natal chart and more as a print-ready PDF, self-contained HTML or Markdown, white-labelled with your name, logo, colours and typeface, in every supported language. Each report states its cost in requests.
+#[derive(Debug, Clone, Copy)]
+pub struct Reports<'a>(&'a Core);
+impl crate::Roxy {
+    /// Reports operations.
+    pub fn reports(&self) -> Reports<'_> {
+        Reports(&self.core)
+    }
+}
+impl Reports<'_> {
+    /// BaZi report - Branded PDF report API
+    ///
+    /// Renders the bazi report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/bazi`
+    pub async fn generate_bazi_report(
+        &self,
+        params: &types::GenerateBaziReportParams,
+        body: &types::BaziReportRequest,
+    ) -> Result<types::GenerateBaziReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "bazi"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Human Design report - Branded PDF report API
+    ///
+    /// Renders the human design report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/human-design`
+    pub async fn generate_human_design_report(
+        &self,
+        params: &types::GenerateHumanDesignReportParams,
+        body: &types::HumanDesignReportRequest,
+    ) -> Result<types::GenerateHumanDesignReportResponse, crate::Error> {
+        let request = self
+            .0
+            .request(reqwest::Method::POST, &["reports", "human-design"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Kundli report - Branded PDF report API
+    ///
+    /// Renders the kundli report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/kundli`
+    pub async fn generate_kundli_report(
+        &self,
+        params: &types::GenerateKundliReportParams,
+        body: &types::KundliReportRequest,
+    ) -> Result<types::GenerateKundliReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "kundli"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Kundli matching report - Branded PDF report API
+    ///
+    /// Renders the kundli matching report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/matchmaking`
+    pub async fn generate_matchmaking_report(
+        &self,
+        params: &types::GenerateMatchmakingReportParams,
+        body: &types::MatchmakingReportRequest,
+    ) -> Result<types::GenerateMatchmakingReportResponse, crate::Error> {
+        let request = self
+            .0
+            .request(reqwest::Method::POST, &["reports", "matchmaking"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Natal chart report - Branded PDF report API
+    ///
+    /// Renders the natal chart report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/natal`
+    pub async fn generate_natal_report(
+        &self,
+        params: &types::GenerateNatalReportParams,
+        body: &types::NatalReportRequest,
+    ) -> Result<types::GenerateNatalReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "natal"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Numerology report - Branded PDF report API
+    ///
+    /// Renders the numerology report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/numerology`
+    pub async fn generate_numerology_report(
+        &self,
+        params: &types::GenerateNumerologyReportParams,
+        body: &types::NumerologyReportRequest,
+    ) -> Result<types::GenerateNumerologyReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "numerology"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Synastry report - Branded PDF report API
+    ///
+    /// Renders the synastry report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/synastry`
+    pub async fn generate_synastry_report(
+        &self,
+        params: &types::GenerateSynastryReportParams,
+        body: &types::SynastryReportRequest,
+    ) -> Result<types::GenerateSynastryReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "synastry"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Tarot reading report - Branded PDF report API
+    ///
+    /// Renders the tarot reading report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/tarot`
+    pub async fn generate_tarot_report(
+        &self,
+        params: &types::GenerateTarotReportParams,
+        body: &types::TarotReportRequest,
+    ) -> Result<types::GenerateTarotReportResponse, crate::Error> {
+        let request = self.0.request(reqwest::Method::POST, &["reports", "tarot"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+    /// Yearly forecast report - Branded PDF report API
+    ///
+    /// Renders the yearly forecast report from the same input as its chart, as a white-label document under your name, logo, colours and typeface. Like every template in the reports catalogue, it returns a print-ready PDF, self-contained HTML or Markdown, in the language set by lang.
+    ///
+    /// `POST /reports/yearly-forecast`
+    pub async fn generate_yearly_forecast_report(
+        &self,
+        params: &types::GenerateYearlyForecastReportParams,
+        body: &types::YearlyForecastReportRequest,
+    ) -> Result<types::GenerateYearlyForecastReportResponse, crate::Error> {
+        let request = self
+            .0
+            .request(reqwest::Method::POST, &["reports", "yearly-forecast"])?;
+        let request = if let Some(value) = &params.lang {
+            request.query(&[("lang", value)])
+        } else {
+            request
+        };
+        let request = request.json(body);
+        self.0.send(request).await
+    }
+}
 /// List the response languages accepted by the `lang` query parameter on every i18n-aware endpoint. Use to populate language pickers, validate user input, or auto-detect available locales in agent integrations.
 #[derive(Debug, Clone, Copy)]
 pub struct Languages<'a>(&'a Core);

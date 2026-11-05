@@ -17,6 +17,21 @@ string_enum! {
         /// A date lies outside the span the planetary positions are served for. The error names the supported dates.
         DateOutOfRange = "date_out_of_range",
         ///
+        /// HTTP 400.
+        ///
+        /// The report branding cannot be used, for example a logo that is not a PNG, JPEG, WebP or SVG image.
+        InvalidBranding = "invalid_branding",
+        ///
+        /// HTTP 400.
+        ///
+        /// The report logo could not be fetched: it must be an HTTPS URL on a public host that answers within the size limit.
+        LogoFetchFailed = "logo_fetch_failed",
+        ///
+        /// HTTP 400.
+        ///
+        /// The report text holds a character no report font draws. The error names it: remove or replace it.
+        UnsupportedCharacter = "unsupported_character",
+        ///
         /// HTTP 401.
         ///
         /// No API key was sent.
@@ -127,6 +142,11 @@ string_enum! {
         /// A keyless request has used up its trial allowance.
         FreeTierExhausted = "free_tier_exhausted",
         ///
+        /// HTTP 429.
+        ///
+        /// Too many reports were requested this minute. Retry-After gives the seconds to the next minute.
+        ReportsRateLimited = "reports_rate_limited",
+        ///
         /// HTTP 500.
         ///
         /// The request failed inside our service. Retry with exponential backoff.
@@ -136,6 +156,16 @@ string_enum! {
         ///
         /// Heavy calculations are briefly at capacity. Send the same request again after Retry-After seconds.
         ComputeSaturated = "compute_saturated",
+        ///
+        /// HTTP 503.
+        ///
+        /// Report rendering is briefly at capacity. Send the same request again after Retry-After seconds.
+        ReportsBusy = "reports_busy",
+        ///
+        /// HTTP 503.
+        ///
+        /// The report took too long to render. Send the same request again.
+        ReportRenderTimeout = "report_render_timeout",
         ///
         /// Any HTTP status.
         ///
@@ -150,6 +180,9 @@ impl ErrorCode {
             Self::ValidationError => Some(400),
             Self::BadRequest => Some(400),
             Self::DateOutOfRange => Some(400),
+            Self::InvalidBranding => Some(400),
+            Self::LogoFetchFailed => Some(400),
+            Self::UnsupportedCharacter => Some(400),
             Self::ApiKeyRequired => Some(401),
             Self::InvalidApiKey => Some(401),
             Self::ApiKeyRevoked => Some(401),
@@ -172,8 +205,11 @@ impl ErrorCode {
             Self::RateLimitPerMinute => Some(429),
             Self::RateLimited => Some(429),
             Self::FreeTierExhausted => Some(429),
+            Self::ReportsRateLimited => Some(429),
             Self::InternalError => Some(500),
             Self::ComputeSaturated => Some(503),
+            Self::ReportsBusy => Some(503),
+            Self::ReportRenderTimeout => Some(503),
             Self::Error => None,
             Self::Other(_) => None,
         }

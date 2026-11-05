@@ -918,6 +918,14 @@ pub async fn call(
                 .await?;
             Ok(serde_json::to_value(result)?)
         }
+        "generateBaziReport" => {
+            let params: roxyapi::types::GenerateBaziReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::BaziReportRequest = serde_json::from_value(body)?;
+            let result = client.reports().generate_bazi_report(&params, &body).await?;
+            Ok(serde_json::to_value(result)?)
+        }
         "generateBirthChart" => {
             let params: roxyapi::types::GenerateBirthChartParams = serde_json::from_value(
                 params,
@@ -1021,6 +1029,19 @@ pub async fn call(
                 .await?;
             Ok(serde_json::to_value(result)?)
         }
+        "generateHumanDesignReport" => {
+            let params: roxyapi::types::GenerateHumanDesignReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::HumanDesignReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client
+                .reports()
+                .generate_human_design_report(&params, &body)
+                .await?;
+            Ok(serde_json::to_value(result)?)
+        }
         "generateKpChart" => {
             let params: roxyapi::types::GenerateKpChartParams = serde_json::from_value(
                 params,
@@ -1030,6 +1051,16 @@ pub async fn call(
                 .vedic_astrology()
                 .generate_kp_chart(&params, &body)
                 .await?;
+            Ok(serde_json::to_value(result)?)
+        }
+        "generateKundliReport" => {
+            let params: roxyapi::types::GenerateKundliReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::KundliReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client.reports().generate_kundli_report(&params, &body).await?;
             Ok(serde_json::to_value(result)?)
         }
         "generateLilith" => {
@@ -1070,6 +1101,19 @@ pub async fn call(
             let result = client.vastu().generate_mandala(&params, &body).await?;
             Ok(serde_json::to_value(result)?)
         }
+        "generateMatchmakingReport" => {
+            let params: roxyapi::types::GenerateMatchmakingReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::MatchmakingReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client
+                .reports()
+                .generate_matchmaking_report(&params, &body)
+                .await?;
+            Ok(serde_json::to_value(result)?)
+        }
         "generateMayanChart" => {
             let params: roxyapi::types::GenerateMayanChartParams = serde_json::from_value(
                 params,
@@ -1101,6 +1145,14 @@ pub async fn call(
             let result = client.astrology().generate_natal_chart(&params, &body).await?;
             Ok(serde_json::to_value(result)?)
         }
+        "generateNatalReport" => {
+            let params: roxyapi::types::GenerateNatalReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::NatalReportRequest = serde_json::from_value(body)?;
+            let result = client.reports().generate_natal_report(&params, &body).await?;
+            Ok(serde_json::to_value(result)?)
+        }
         "generateNavamsa" => {
             let params: roxyapi::types::GenerateNavamsaParams = serde_json::from_value(
                 params,
@@ -1122,6 +1174,19 @@ pub async fn call(
             let result = client
                 .numerology()
                 .generate_numerology_chart(&params, &body)
+                .await?;
+            Ok(serde_json::to_value(result)?)
+        }
+        "generateNumerologyReport" => {
+            let params: roxyapi::types::GenerateNumerologyReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::NumerologyReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client
+                .reports()
+                .generate_numerology_report(&params, &body)
                 .await?;
             Ok(serde_json::to_value(result)?)
         }
@@ -1187,6 +1252,27 @@ pub async fn call(
             let result = client.astrology().generate_solar_return(&params, &body).await?;
             Ok(serde_json::to_value(result)?)
         }
+        "generateSynastryReport" => {
+            let params: roxyapi::types::GenerateSynastryReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::SynastryReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client
+                .reports()
+                .generate_synastry_report(&params, &body)
+                .await?;
+            Ok(serde_json::to_value(result)?)
+        }
+        "generateTarotReport" => {
+            let params: roxyapi::types::GenerateTarotReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::TarotReportRequest = serde_json::from_value(body)?;
+            let result = client.reports().generate_tarot_report(&params, &body).await?;
+            Ok(serde_json::to_value(result)?)
+        }
         "generateTimeline" => {
             let params: roxyapi::types::GenerateTimelineParams = serde_json::from_value(
                 params,
@@ -1205,6 +1291,19 @@ pub async fn call(
                 body,
             )?;
             let result = client.human_design().generate_transit(&params, &body).await?;
+            Ok(serde_json::to_value(result)?)
+        }
+        "generateYearlyForecastReport" => {
+            let params: roxyapi::types::GenerateYearlyForecastReportParams = serde_json::from_value(
+                params,
+            )?;
+            let body: roxyapi::types::YearlyForecastReportRequest = serde_json::from_value(
+                body,
+            )?;
+            let result = client
+                .reports()
+                .generate_yearly_forecast_report(&params, &body)
+                .await?;
             Ok(serde_json::to_value(result)?)
         }
         "getAlmanacDay" => {

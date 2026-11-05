@@ -96,6 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | [Angel Numbers](https://roxyapi.com/api-reference/angel-numbers) | `angel_numbers()` | 4 |
 | [Location and Timezone](https://roxyapi.com/api-reference/location-and-timezone) | `location()` | 3 |
 | [Usage](https://roxyapi.com/api-reference/usage) | `usage()` | 1 |
+| [Reports](https://roxyapi.com/api-reference/reports) | `reports()` | 9 |
 | [Languages](https://roxyapi.com/api-reference/languages) | `languages()` | 2 |
 <!-- END:DOMAINS -->
 
@@ -994,6 +995,9 @@ Every error returns `{ error, code, doc_url }`. Switch on `code`; `error` is rea
 | 400 | `validation_error` | A field is missing or invalid. The body lists every failing field at once in issues, each with its path and the expected shape. |
 | 400 | `bad_request` | The request was rejected as a whole, for example a body that is not valid JSON or a date range that ends before it starts. |
 | 400 | `date_out_of_range` | A date lies outside the span the planetary positions are served for. The error names the supported dates. |
+| 400 | `invalid_branding` | The report branding cannot be used, for example a logo that is not a PNG, JPEG, WebP or SVG image. |
+| 400 | `logo_fetch_failed` | The report logo could not be fetched: it must be an HTTPS URL on a public host that answers within the size limit. |
+| 400 | `unsupported_character` | The report text holds a character no report font draws. The error names it: remove or replace it. |
 | 401 | `api_key_required` | No API key was sent. |
 | 401 | `invalid_api_key` | The key sent is malformed or cannot be verified. |
 | 401 | `api_key_revoked` | The key was valid once and has since been revoked from the account page. |
@@ -1016,8 +1020,11 @@ Every error returns `{ error, code, doc_url }`. Switch on `code`; `error` is rea
 | 429 | `rate_limit_per_minute` | The per-minute limit of the plan was reached. Retry-After gives the seconds to the next minute, and the monthly allowance is not charged. |
 | 429 | `rate_limited` | A rate limit was reached, reported without the plan detail. |
 | 429 | `free_tier_exhausted` | A keyless request has used up its trial allowance. |
+| 429 | `reports_rate_limited` | Too many reports were requested this minute. Retry-After gives the seconds to the next minute. |
 | 500 | `internal_error` | The request failed inside our service. Retry with exponential backoff. |
 | 503 | `compute_saturated` | Heavy calculations are briefly at capacity. Send the same request again after Retry-After seconds. |
+| 503 | `reports_busy` | Report rendering is briefly at capacity. Send the same request again after Retry-After seconds. |
+| 503 | `report_render_timeout` | The report took too long to render. Send the same request again. |
 | Any | `error` | A fallback for a status with no more specific code. The status and the error field carry the signal. |
 <!-- END:ERRORS -->
 

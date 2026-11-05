@@ -184,6 +184,139 @@ string_enum! {
         Sankhya = "sankhya",
     }
 }
+/// Request body of `generateYearlyForecastReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct YearlyForecastReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<YearlyForecastReportRequestBranding>,
+    /// Birth date in YYYY-MM-DD format. Anchors the natal Sun longitude the transiting Sun returns to each year.
+    pub date: String,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<YearlyForecastReportRequestFormat>,
+    /// House system for the return chart. placidus is the Western default. whole-sign, equal, and koch are also supported.
+    #[serde(rename = "houseSystem", skip_serializing_if = "Option::is_none")]
+    pub house_system: Option<YearlyForecastReportRequestHouseSystem>,
+    /// Latitude of the solar return location in decimal degrees. The solar return is location-sensitive: use the birthplace to anchor the chart to natal geography, or the current city for a relocated solar return.
+    pub latitude: f64,
+    /// Longitude of the solar return location in decimal degrees. Sets the local sidereal time, so it drives the Ascendant, Midheaven, and house cusps of the return chart.
+    pub longitude: f64,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<YearlyForecastReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Birth time in 24-hour HH:MM:SS format. Pins the exact natal Sun position that defines the solar return moment.
+    pub time: String,
+    /// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+    pub timezone: YearlyForecastReportRequestTimezone,
+    /// Year to cast the solar return for. The chart is erected for the moment in this year when the transiting Sun returns to the natal Sun longitude, on or within a day of the birthday.
+    pub year: i64,
+}
+/// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum YearlyForecastReportRequestTimezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct YearlyForecastReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<YearlyForecastReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    YearlyForecastReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// House system for the return chart. placidus is the Western default. whole-sign, equal, and koch are also supported.
+    YearlyForecastReportRequestHouseSystem {
+        Placidus = "placidus",
+        WholeSign = "whole-sign",
+        Equal = "equal",
+        Koch = "koch",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    YearlyForecastReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct YearlyForecastReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<YearlyForecastReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<YearlyForecastReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<YearlyForecastReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    YearlyForecastReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    YearlyForecastReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct YearlyForecastReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
 /// Complete upagraha positions for a birth chart
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -466,6 +599,314 @@ pub enum TransitsRequestNatalChartTimezone {
     Number(f64),
     /// A string value.
     String(String),
+}
+/// Request body of `generateTarotReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct TarotReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<TarotReportRequestBranding>,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<TarotReportRequestFormat>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<TarotReportRequestPage>,
+    /// Optional querent question, printed on the report. Omit for a general reading.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub question: Option<String>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Optional seed for a reproducible draw: the same seed and spread always produce the same report. Omit for a random draw; the report prints the seed it used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<String>,
+    /// Which spread to draw: celtic-cross (ten cards, the default), three-card, love or career, the same spreads the spread routes cast.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spread: Option<TarotReportRequestSpread>,
+}
+string_enum! {
+    /// Which spread to draw: celtic-cross (ten cards, the default), three-card, love or career, the same spreads the spread routes cast.
+    TarotReportRequestSpread {
+        CelticCross = "celtic-cross",
+        ThreeCard = "three-card",
+        Love = "love",
+        Career = "career",
+    }
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct TarotReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<TarotReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    TarotReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    TarotReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct TarotReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<TarotReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<TarotReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<TarotReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    TarotReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    TarotReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct TarotReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
+/// Request body of `generateSynastryReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct SynastryReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<SynastryReportRequestBranding>,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<SynastryReportRequestFormat>,
+    /// House system for both natal charts. Placidus (default), Whole Sign, Equal, or Koch.
+    #[serde(rename = "houseSystem", skip_serializing_if = "Option::is_none")]
+    pub house_system: Option<SynastryReportRequestHouseSystem>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<SynastryReportRequestPage>,
+    /// The `person1` field.
+    pub person1: SynastryReportRequestPerson1,
+    /// The `person2` field.
+    pub person2: SynastryReportRequestPerson2,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+}
+/// The `person2` value.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct SynastryReportRequestPerson2 {
+    /// Birth date in YYYY-MM-DD format. Determines planetary positions for the specific calendar day.
+    pub date: String,
+    /// Birth location latitude in decimal degrees (-90 to 90). Positive = North, negative = South.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees (-180 to 180). Positive = East, negative = West.
+    pub longitude: f64,
+    /// Optional display name for this person. Included in the response for easy identification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
+    pub node_type: Option<SynastryReportRequestPerson2NodeType>,
+    /// Birth time in 24-hour HH:MM:SS format. Determines the Ascendant (rising sign) and house cusps. Use 12:00:00 if unknown.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+    pub timezone: SynastryReportRequestPerson2Timezone,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum SynastryReportRequestPerson2Timezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+string_enum! {
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    SynastryReportRequestPerson2NodeType {
+        Mean = "mean",
+        TrueValue = "true",
+    }
+}
+/// The `person1` value.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct SynastryReportRequestPerson1 {
+    /// Birth date in YYYY-MM-DD format. Determines planetary positions for the specific calendar day.
+    pub date: String,
+    /// Birth location latitude in decimal degrees (-90 to 90). Positive = North, negative = South.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees (-180 to 180). Positive = East, negative = West.
+    pub longitude: f64,
+    /// Optional display name for this person. Included in the response for easy identification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
+    pub node_type: Option<SynastryReportRequestPerson1NodeType>,
+    /// Birth time in 24-hour HH:MM:SS format. Determines the Ascendant (rising sign) and house cusps. Use 12:00:00 if unknown.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+    pub timezone: SynastryReportRequestPerson1Timezone,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum SynastryReportRequestPerson1Timezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+string_enum! {
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    SynastryReportRequestPerson1NodeType {
+        Mean = "mean",
+        TrueValue = "true",
+    }
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct SynastryReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<SynastryReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    SynastryReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// House system for both natal charts. Placidus (default), Whole Sign, Equal, or Koch.
+    SynastryReportRequestHouseSystem {
+        Placidus = "placidus",
+        WholeSign = "whole-sign",
+        Equal = "equal",
+        Koch = "koch",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    SynastryReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct SynastryReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<SynastryReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<SynastryReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<SynastryReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    SynastryReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    SynastryReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct SynastryReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
 }
 /// Response body of `generateSolarArc`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -1843,6 +2284,120 @@ string_enum! {
         Custom = "custom",
     }
 }
+/// Request body of `generateNumerologyReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct NumerologyReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<NumerologyReportRequestBranding>,
+    /// Calendar year for the Personal Year. When omitted it is the year of targetDate, or of the current UTC date when targetDate is omitted too. It moves the Personal Year only: the nested personalMonth and maturityStatus.currentAge read targetDate.
+    #[serde(rename = "currentYear", skip_serializing_if = "Option::is_none")]
+    pub current_year: Option<i64>,
+    /// Birth day (1-31)
+    pub day: i64,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<NumerologyReportRequestFormat>,
+    /// Full birth name as it appears on the birth certificate. Used for every letter-based number in the chart: Expression, Soul Urge, Personality, Karmic Lessons, Hidden Passion, Subconscious Self and the special letters. A name in any script is converted to Latin letters before it is counted, Cyrillic and Greek as the passport spelling and accents folded to the base letter, and the calculation lists the letters counted. For a script that does not write its vowels, send the Latin spelling the person uses.
+    #[serde(rename = "fullName")]
+    pub full_name: String,
+    /// Birth month (1-12)
+    pub month: i64,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<NumerologyReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Date to read the chart on, in YYYY-MM-DD format, in the years 100 to 2100, on or after the birth date. Send the local date of the user for an exact answer: it sets maturityStatus.currentAge and isActive, the Personal Month, and the Personal Year when currentYear is absent. Defaults to today (UTC).
+    #[serde(rename = "targetDate", skip_serializing_if = "Option::is_none")]
+    pub target_date: Option<String>,
+    /// Birth year between 100 and 2100. Supports historical figures like Einstein (1879) and Shakespeare (1564).
+    pub year: i64,
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NumerologyReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<NumerologyReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    NumerologyReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    NumerologyReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NumerologyReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<NumerologyReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<NumerologyReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<NumerologyReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    NumerologyReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    NumerologyReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NumerologyReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
 /// Response body of `generateNavamsa`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -2030,6 +2585,147 @@ string_enum! {
         Raman = "raman",
         Custom = "custom",
     }
+}
+/// Request body of `generateNatalReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct NatalReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<NatalReportRequestBranding>,
+    /// Birth date in YYYY-MM-DD format. Determines planetary positions for the specific calendar day.
+    pub date: String,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<NatalReportRequestFormat>,
+    /// House system for dividing the chart into 12 houses. Placidus (default) is most popular in Western astrology and time-sensitive. Whole Sign assigns one sign per house (simpler, ancient). Equal houses divide chart into 30° segments from Ascendant. Koch emphasizes houses in high latitudes.
+    #[serde(rename = "houseSystem", skip_serializing_if = "Option::is_none")]
+    pub house_system: Option<NatalReportRequestHouseSystem>,
+    /// Birth location latitude in decimal degrees (-90 to 90). Positive = North, negative = South.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees (-180 to 180). Positive = East, negative = West.
+    pub longitude: f64,
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
+    pub node_type: Option<NatalReportRequestNodeType>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<NatalReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Birth time in 24-hour HH:MM:SS format. Determines the Ascendant (rising sign) and house cusps. Use 12:00:00 if unknown.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+    pub timezone: NatalReportRequestTimezone,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum NatalReportRequestTimezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NatalReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<NatalReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    NatalReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node. True is the osculating node and the default, because it is what most Western chart software reports; mean is the smoothed node preferred by several evolutionary schools, so pass "mean" to match one. Nothing else in the chart changes, and the two agree on the sign except when the node sits within about 1.8 degrees of a cusp. Defaults to "true".
+    NatalReportRequestNodeType {
+        Mean = "mean",
+        TrueValue = "true",
+    }
+}
+string_enum! {
+    /// House system for dividing the chart into 12 houses. Placidus (default) is most popular in Western astrology and time-sensitive. Whole Sign assigns one sign per house (simpler, ancient). Equal houses divide chart into 30° segments from Ascendant. Koch emphasizes houses in high latitudes.
+    NatalReportRequestHouseSystem {
+        Placidus = "placidus",
+        WholeSign = "whole-sign",
+        Equal = "equal",
+        Koch = "koch",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    NatalReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NatalReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<NatalReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<NatalReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<NatalReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    NatalReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    NatalReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct NatalReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
 }
 /// Response body of `generateNatalChart`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -2518,6 +3214,177 @@ pub struct NakshatraListResponseItemRemedies {
     pub mantras: String,
     /// Spiritual practices and daily rituals beneficial for natives of this nakshatra.
     pub rituals: String,
+}
+/// Request body of `generateMatchmakingReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequest {
+    /// Sidereal frame (ayanamsa) the chart is cast in. "lahiri" is Lahiri/Chitrapaksha, the traditional Vedic standard used by most software, and is the default. "raman" is the B.V. Raman ayanamsa from Hindu Predictive Astrology, about 1.45 degrees below Lahiri. "kp-newcomb" and "kp-old" are the two Krishnamurti Paddhati frames. "custom" takes your own value in degrees via ayanamsaValue, for reconciling exactly against a specific reference program. The frame rotates the whole zodiac, so a graha sitting within 1.45 degrees of a boundary can change rashi or nakshatra when you switch: pick the one your reference software uses and keep it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ayanamsa: Option<MatchmakingReportRequestAyanamsa>,
+    /// Custom ayanamsa value in degrees. When provided, overrides the computed ayanamsa from the selected type. Use for testing with specific ayanamsa values or matching a particular reference source.
+    #[serde(rename = "ayanamsaValue", skip_serializing_if = "Option::is_none")]
+    pub ayanamsa_value: Option<f64>,
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<MatchmakingReportRequestBranding>,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<MatchmakingReportRequestFormat>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<MatchmakingReportRequestPage>,
+    /// Birth data of the first person (typically the boy/groom in traditional Ashtakoot matching). Date, time, and location determine Moon nakshatra for koota scoring.
+    pub person1: MatchmakingReportRequestPerson1,
+    /// Birth data of the second person (typically the girl/bride in traditional Ashtakoot matching). Moon nakshatra compared against person 1 across all 8 kootas.
+    pub person2: MatchmakingReportRequestPerson2,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+}
+/// Birth data of the second person (typically the girl/bride in traditional Ashtakoot matching). Moon nakshatra compared against person 1 across all 8 kootas.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequestPerson2 {
+    /// Birth date in YYYY-MM-DD format. Date determines planetary positions and nakshatra calculations for Vedic kundli (janam patri). Accurate birth date is essential for dashas, yoga calculations, and divisional charts (vargas).
+    pub date: String,
+    /// Birth location latitude in decimal degrees. Location determines local sidereal time for Lagna calculation and affects bhava (house) cusps. Example: Delhi 28.6139, Mumbai 19.0760, Kathmandu 27.7172.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees. Affects local time calculations and ayanamsha adjustments. Example: Delhi 77.2090, Mumbai 72.8777, Kathmandu 85.3240.
+    pub longitude: f64,
+    /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timezone: Option<MatchmakingReportRequestPerson2Timezone>,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum MatchmakingReportRequestPerson2Timezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Birth data of the first person (typically the boy/groom in traditional Ashtakoot matching). Date, time, and location determine Moon nakshatra for koota scoring.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequestPerson1 {
+    /// Birth date in YYYY-MM-DD format. Date determines planetary positions and nakshatra calculations for Vedic kundli (janam patri). Accurate birth date is essential for dashas, yoga calculations, and divisional charts (vargas).
+    pub date: String,
+    /// Birth location latitude in decimal degrees. Location determines local sidereal time for Lagna calculation and affects bhava (house) cusps. Example: Delhi 28.6139, Mumbai 19.0760, Kathmandu 27.7172.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees. Affects local time calculations and ayanamsha adjustments. Example: Delhi 77.2090, Mumbai 72.8777, Kathmandu 85.3240.
+    pub longitude: f64,
+    /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timezone: Option<MatchmakingReportRequestPerson1Timezone>,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum MatchmakingReportRequestPerson1Timezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<MatchmakingReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    MatchmakingReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    MatchmakingReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<MatchmakingReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<MatchmakingReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<MatchmakingReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    MatchmakingReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    MatchmakingReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct MatchmakingReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
+string_enum! {
+    /// Sidereal frame (ayanamsa) the chart is cast in. "lahiri" is Lahiri/Chitrapaksha, the traditional Vedic standard used by most software, and is the default. "raman" is the B.V. Raman ayanamsa from Hindu Predictive Astrology, about 1.45 degrees below Lahiri. "kp-newcomb" and "kp-old" are the two Krishnamurti Paddhati frames. "custom" takes your own value in degrees via ayanamsaValue, for reconciling exactly against a specific reference program. The frame rotates the whole zodiac, so a graha sitting within 1.45 degrees of a boundary can change rashi or nakshatra when you switch: pick the one your reference software uses and keep it.
+    MatchmakingReportRequestAyanamsa {
+        KpNewcomb = "kp-newcomb",
+        KpOld = "kp-old",
+        Lahiri = "lahiri",
+        Raman = "raman",
+        Custom = "custom",
+    }
 }
 /// Response body of `checkManglikDosha`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -5757,6 +6624,142 @@ string_enum! {
         Koch = "koch",
     }
 }
+/// Request body of `generateKundliReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct KundliReportRequest {
+    /// Sidereal frame (ayanamsa) the chart is cast in. "lahiri" is Lahiri/Chitrapaksha, the traditional Vedic standard used by most software, and is the default. "raman" is the B.V. Raman ayanamsa from Hindu Predictive Astrology, about 1.45 degrees below Lahiri. "kp-newcomb" and "kp-old" are the two Krishnamurti Paddhati frames. "custom" takes your own value in degrees via ayanamsaValue, for reconciling exactly against a specific reference program. The frame rotates the whole zodiac, so a graha sitting within 1.45 degrees of a boundary can change rashi or nakshatra when you switch: pick the one your reference software uses and keep it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ayanamsa: Option<KundliReportRequestAyanamsa>,
+    /// Custom ayanamsa value in degrees. When provided, overrides the computed ayanamsa from the selected type. Use for testing with specific ayanamsa values or matching a particular reference source.
+    #[serde(rename = "ayanamsaValue", skip_serializing_if = "Option::is_none")]
+    pub ayanamsa_value: Option<f64>,
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<KundliReportRequestBranding>,
+    /// Birth date in YYYY-MM-DD format. Date determines planetary positions and nakshatra calculations for Vedic kundli (janam patri). Accurate birth date is essential for dashas, yoga calculations, and divisional charts (vargas).
+    pub date: String,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<KundliReportRequestFormat>,
+    /// Birth location latitude in decimal degrees. Location determines local sidereal time for Lagna calculation and affects bhava (house) cusps. Example: Delhi 28.6139, Mumbai 19.0760, Kathmandu 27.7172.
+    pub latitude: f64,
+    /// Birth location longitude in decimal degrees. Affects local time calculations and ayanamsha adjustments. Example: Delhi 77.2090, Mumbai 72.8777, Kathmandu 85.3240.
+    pub longitude: f64,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<KundliReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Birth time in 24-hour HH:MM:SS format. Time is CRITICAL for Lagna (Ascendant) calculation and house divisions. It changes every two hours roughly. Even minutes matter for accurate nakshatra pada and divisional chart (D9, D10) calculations. Without exact time, Lagna and house-based predictions will be incorrect.
+    pub time: String,
+    /// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timezone: Option<KundliReportRequestTimezone>,
+}
+/// Timezone: an IANA name (e.g. "America/New_York", "Europe/London", or `cities[0].timezone` from /location/search) or decimal hours from UTC (e.g. -5 for EST, 5.5 for IST). An IANA name is resolved to the offset in force at the given date and time. Defaults to 5.5.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum KundliReportRequestTimezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct KundliReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<KundliReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    KundliReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    KundliReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct KundliReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<KundliReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<KundliReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<KundliReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    KundliReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    KundliReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct KundliReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
+string_enum! {
+    /// Sidereal frame (ayanamsa) the chart is cast in. "lahiri" is Lahiri/Chitrapaksha, the traditional Vedic standard used by most software, and is the default. "raman" is the B.V. Raman ayanamsa from Hindu Predictive Astrology, about 1.45 degrees below Lahiri. "kp-newcomb" and "kp-old" are the two Krishnamurti Paddhati frames. "custom" takes your own value in degrees via ayanamsaValue, for reconciling exactly against a specific reference program. The frame rotates the whole zodiac, so a graha sitting within 1.45 degrees of a boundary can change rashi or nakshatra when you switch: pick the one your reference software uses and keep it.
+    KundliReportRequestAyanamsa {
+        KpNewcomb = "kp-newcomb",
+        KpOld = "kp-old",
+        Lahiri = "lahiri",
+        Raman = "raman",
+        Custom = "custom",
+    }
+}
 /// Response body of `checkKalsarpaDosha`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -7748,6 +8751,137 @@ string_enum! {
         Raman = "raman",
         Custom = "custom",
     }
+}
+/// Request body of `generateHumanDesignReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct HumanDesignReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<HumanDesignReportRequestBranding>,
+    /// Birth date in YYYY-MM-DD format. The anchor for both the Personality activations at birth and the Design activations 88 degrees of solar arc earlier.
+    pub date: String,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<HumanDesignReportRequestFormat>,
+    /// Birth latitude in decimal degrees. Optional and does not affect the bodygraph, which depends only on ecliptic longitudes. Defaults to 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latitude: Option<f64>,
+    /// Birth longitude in decimal degrees. Optional and does not affect the bodygraph. Defaults to 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub longitude: Option<f64>,
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node activations. True is what professional Human Design software uses (HumanDesign.ai, Total Human Design) and is the value RoxyAPI verifies against, so leave it unset for a standard chart. It matters only when a node sits on a gate boundary, where the choice moves a node gate. Because a gate can be half of a channel, that can change the completed channels and, with them, whether a center reads defined or open, plus the definition, authority, profile or type. A chart where only one center disagrees is the usual shape, since the type and profile often survive unchanged. If another calculator disagrees on any of those, it is almost certainly using the mean node: pass "mean" to match it. Defaults to "true".
+    #[serde(rename = "nodeType", skip_serializing_if = "Option::is_none")]
+    pub node_type: Option<HumanDesignReportRequestNodeType>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<HumanDesignReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Birth time in 24-hour HH:MM:SS format. Precision matters: the profile lines and gate boundaries shift with the exact minute of birth.
+    pub time: String,
+    /// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+    pub timezone: HumanDesignReportRequestTimezone,
+}
+/// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum HumanDesignReportRequestTimezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct HumanDesignReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<HumanDesignReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    HumanDesignReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Lunar node convention. "mean" is the smoothed average node, which always moves retrograde; "true" is the osculating node, which tracks the real perturbed node, oscillates up to about 1.5 degrees either side of the mean on a 173-day cycle, and can briefly turn direct. Neither is more correct and they almost always fall in the same sign. Applies to the North and South Node activations. True is what professional Human Design software uses (HumanDesign.ai, Total Human Design) and is the value RoxyAPI verifies against, so leave it unset for a standard chart. It matters only when a node sits on a gate boundary, where the choice moves a node gate. Because a gate can be half of a channel, that can change the completed channels and, with them, whether a center reads defined or open, plus the definition, authority, profile or type. A chart where only one center disagrees is the usual shape, since the type and profile often survive unchanged. If another calculator disagrees on any of those, it is almost certainly using the mean node: pass "mean" to match it. Defaults to "true".
+    HumanDesignReportRequestNodeType {
+        Mean = "mean",
+        TrueValue = "true",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    HumanDesignReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct HumanDesignReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<HumanDesignReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<HumanDesignReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<HumanDesignReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    HumanDesignReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    HumanDesignReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct HumanDesignReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
 }
 /// Response body of `calculateHouses`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -13610,6 +14744,8 @@ pub struct GetMoonCalendarResponseCalendarItem {
     pub illumination: f64,
     /// Lunar phase name for this date.
     pub phase: String,
+    /// Tropical zodiac sign the Moon occupies at noon UTC on this date, canonical English. Use it to key a sign glyph or a moon-in-sign planting and ritual guide.
+    pub sign: String,
 }
 /// Path and query parameters of `getMoonCalendar`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -21459,6 +22595,60 @@ string_enum! {
         ZhHant = "zh-Hant",
     }
 }
+/// Response body of `generateYearlyForecastReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateYearlyForecastReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateYearlyForecastReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateYearlyForecastReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateYearlyForecastReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateYearlyForecastReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateYearlyForecastReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateYearlyForecastReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
+    }
+}
 /// Response body of `generateTransit`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -21846,6 +23036,114 @@ string_enum! {
         Ru = "ru",
         ZhHans = "zh-Hans",
         ZhHant = "zh-Hant",
+    }
+}
+/// Response body of `generateTarotReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateTarotReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateTarotReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateTarotReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateTarotReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateTarotReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateTarotReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateTarotReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
+    }
+}
+/// Response body of `generateSynastryReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateSynastryReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateSynastryReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateSynastryReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateSynastryReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateSynastryReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateSynastryReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateSynastryReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
     }
 }
 /// Response body of `generateSolarReturn`.
@@ -22630,6 +23928,60 @@ string_enum! {
         ZhHant = "zh-Hant",
     }
 }
+/// Response body of `generateNumerologyReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateNumerologyReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateNumerologyReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateNumerologyReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateNumerologyReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateNumerologyReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateNumerologyReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateNumerologyReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
+    }
+}
 /// Response body of `generateNumerologyChart`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -23332,6 +24684,60 @@ string_enum! {
         ZhHant = "zh-Hant",
     }
 }
+/// Response body of `generateNatalReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateNatalReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateNatalReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateNatalReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateNatalReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateNatalReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateNatalReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateNatalReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
+    }
+}
 /// Path and query parameters of `generateNatalChart`.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[non_exhaustive]
@@ -23818,6 +25224,60 @@ string_enum! {
         Ru = "ru",
         ZhHans = "zh-Hans",
         ZhHant = "zh-Hant",
+    }
+}
+/// Response body of `generateMatchmakingReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateMatchmakingReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateMatchmakingReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateMatchmakingReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateMatchmakingReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateMatchmakingReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateMatchmakingReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateMatchmakingReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
     }
 }
 /// Response body of `generateMandala`.
@@ -24513,6 +25973,60 @@ string_enum! {
         ZhHant = "zh-Hant",
     }
 }
+/// Response body of `generateKundliReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateKundliReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateKundliReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateKundliReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateKundliReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateKundliReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateKundliReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateKundliReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
+    }
+}
 /// Path and query parameters of `generateKpChart`.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[non_exhaustive]
@@ -24544,6 +26058,60 @@ string_enum! {
     GenerateKpChartParamsFocus {
         General = "general",
         Finance = "finance",
+    }
+}
+/// Response body of `generateHumanDesignReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateHumanDesignReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateHumanDesignReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateHumanDesignReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateHumanDesignReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateHumanDesignReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateHumanDesignReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateHumanDesignReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
     }
 }
 /// Response body of `generateFlyingStarChart`.
@@ -26199,6 +27767,60 @@ string_enum! {
     GenerateBirthChartParamsFocus {
         General = "general",
         Finance = "finance",
+    }
+}
+/// Response body of `generateBaziReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateBaziReportResponse {
+    /// Format of the output field present.
+    pub format: GenerateBaziReportResponseFormat,
+    /// The report as one self-contained HTML document. Present when format is html.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html: Option<String>,
+    /// Language the report is written in.
+    pub lang: String,
+    /// The report as CommonMark. Present when format is markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub markdown: Option<String>,
+    /// Number of PDF pages. Present when format is pdf.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pages: Option<i64>,
+    /// The PDF, base64 encoded. Present when format is pdf: decode it and save it as a .pdf file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pdf: Option<String>,
+    /// The report template rendered.
+    pub template: String,
+    /// Report title in the report language, ready for a file name or a heading.
+    pub title: String,
+}
+string_enum! {
+    /// Format of the output field present.
+    GenerateBaziReportResponseFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+/// Path and query parameters of `generateBaziReport`.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct GenerateBaziReportParams {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<GenerateBaziReportParamsLang>,
+}
+string_enum! {
+    /// Report language (BCP 47): the labels, headings and readings are written in it. Supported: en, tr, de, es, hi, pt, fr, ru. Defaults to en.
+    GenerateBaziReportParamsLang {
+        En = "en",
+        Tr = "tr",
+        De = "de",
+        Es = "es",
+        Hi = "hi",
+        Pt = "pt",
+        Fr = "fr",
+        Ru = "ru",
     }
 }
 /// Response body of `generateBaziChart`.
@@ -39696,6 +41318,170 @@ string_enum! {
         Custom = "custom",
     }
 }
+/// Request body of `generateBaziReport`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct BaziReportRequest {
+    /// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branding: Option<BaziReportRequestBranding>,
+    /// Birth date in YYYY-MM-DD format. Sets the year, month and day pillars. The year pillar turns at Beginning of Spring rather than on 1 January, and the month pillar turns at each of the twelve minor solar terms rather than at a calendar month boundary.
+    pub date: String,
+    /// Which instant starts the sexagenary DAY, which only matters for a birth between 23:00 and 23:59. "midnight" is the classical position of the Ming compendium San Ming Tong Hui: the day turns at 00:00 and 23:00 to 23:59 is the late zi hour of the day that is ending, so the hour stem is taken from that day. "early-zi" turns the whole day at 23:00, the practice in Hong Kong, Taiwan and much of South East Asia. "split-zi" is the compromise most software implements and the default here: the day still turns at 00:00, but the hour stem is taken from the next day. The three give three different answers for a late-evening birth and identical answers for every other birth.
+    #[serde(rename = "dayBoundary", skip_serializing_if = "Option::is_none")]
+    pub day_boundary: Option<BaziReportRequestDayBoundary>,
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<BaziReportRequestFormat>,
+    /// Subject sex, used only to pick the luck-pillar direction: a male born in a yang-stem year and a female born in a yin-stem year run forward through the sexagenary cycle, and the other two combinations run backward. It affects nothing else in the response.
+    pub gender: BaziReportRequestGender,
+    /// Which clock the day boundary and the hour branch are read from, so a correction that carries a birth across midnight moves the day pillar with the hour. "clock" is civil time exactly as a birth certificate records it, which is what most calculators use and the default here. "local-mean" shifts to the mean sun over the birth longitude, a correction of up to 59 minutes at the edge of a wide time zone. "solar" adds the equation of time on top of that, up to a further 16 minutes. Both non-civil options need "longitude" in the request and return 400 without it.
+    #[serde(rename = "hourClock", skip_serializing_if = "Option::is_none")]
+    pub hour_clock: Option<BaziReportRequestHourClock>,
+    /// Birth latitude in decimal degrees. Accepted for consistency with the other birth-data endpoints and does not affect any part of a BaZi chart. Defaults to 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latitude: Option<f64>,
+    /// Birth longitude in decimal degrees. Positive is East, negative is West. Required when hourClock is "local-mean" or "solar", which shift the hour branch to the sun over the birth place; omitting it in either case returns 400. Ignored when hourClock is "clock".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub longitude: Option<f64>,
+    /// Page layout of the PDF.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<BaziReportRequestPage>,
+    /// Whether the report carries its written readings. false keeps the charts, tables and key figures and leaves out every interpretation, for a chart-only report at the same cost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readings: Option<bool>,
+    /// Birth time in 24-hour HH:MM:SS format. Sets the hour pillar, which is one of the four and carries the whole picture of later life and offspring. Each Earthly Branch covers two hours, so a birth within a few minutes of an odd hour can land in either. All four pillars are read in the local clock of the birth, and the day boundary is applied in that same clock; only the lunisolar calendar date itself is a world constant, fixed at UTC plus 8 so one instant has one Chinese date everywhere.
+    pub time: String,
+    /// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+    pub timezone: BaziReportRequestTimezone,
+    /// Gregorian year the year-ahead section reads against the natal chart, and the first of the ten annual pillars the luck pillar section lists.
+    pub year: i64,
+    /// Which instant starts the sexagenary YEAR. "li-chun" is Beginning of Spring, around 4 February, and is the classical rule every BaZi text uses, so it is the default on this endpoint. "lunar-new-year" is the folk rule people mean when they say which animal they are, and it falls between late January and late February. The two disagree for any birth in the weeks between them: 14 February 2026 is a Wood Snake year under lunar-new-year and a Fire Horse year under li-chun.
+    #[serde(rename = "yearBoundary", skip_serializing_if = "Option::is_none")]
+    pub year_boundary: Option<BaziReportRequestYearBoundary>,
+}
+string_enum! {
+    /// Which instant starts the sexagenary YEAR. "li-chun" is Beginning of Spring, around 4 February, and is the classical rule every BaZi text uses, so it is the default on this endpoint. "lunar-new-year" is the folk rule people mean when they say which animal they are, and it falls between late January and late February. The two disagree for any birth in the weeks between them: 14 February 2026 is a Wood Snake year under lunar-new-year and a Fire Horse year under li-chun.
+    BaziReportRequestYearBoundary {
+        LiChun = "li-chun",
+        LunarNewYear = "lunar-new-year",
+    }
+}
+/// IANA name (e.g. "America/New_York", "Europe/London", "UTC"), decimal hours (e.g. -5 for EST, 1 for CET), or a fixed UTC offset (e.g. "-05:00", "+01:00"). Prefer the IANA name: it is resolved to the offset in force at the birth date and time, historical daylight-saving rules included, while a fixed offset or decimal is taken literally and will be wrong if it does not match the daylight-saving state at that moment. On a transition day a time in the repeated hour is read as its first occurrence and a time in the skipped hour is moved forward past the gap. Invalid timezones return 400 with a validation error.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+pub enum BaziReportRequestTimezone {
+    /// A number value.
+    Number(f64),
+    /// A string value.
+    String(String),
+}
+/// Page layout of the PDF.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct BaziReportRequestPage {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<BaziReportRequestPageSize>,
+}
+string_enum! {
+    /// Paper size of the PDF. Ignored by html and markdown.
+    BaziReportRequestPageSize {
+        A4 = "A4",
+        Letter = "Letter",
+    }
+}
+string_enum! {
+    /// Which clock the day boundary and the hour branch are read from, so a correction that carries a birth across midnight moves the day pillar with the hour. "clock" is civil time exactly as a birth certificate records it, which is what most calculators use and the default here. "local-mean" shifts to the mean sun over the birth longitude, a correction of up to 59 minutes at the edge of a wide time zone. "solar" adds the equation of time on top of that, up to a further 16 minutes. Both non-civil options need "longitude" in the request and return 400 without it.
+    BaziReportRequestHourClock {
+        Clock = "clock",
+        LocalMean = "local-mean",
+        Solar = "solar",
+    }
+}
+string_enum! {
+    /// Subject sex, used only to pick the luck-pillar direction: a male born in a yang-stem year and a female born in a yin-stem year run forward through the sexagenary cycle, and the other two combinations run backward. It affects nothing else in the response.
+    BaziReportRequestGender {
+        Male = "male",
+        Female = "female",
+    }
+}
+string_enum! {
+    /// Output format: pdf (a print-ready PDF, base64 in the pdf field), html (one self-contained HTML document in the html field) or markdown (CommonMark in the markdown field).
+    BaziReportRequestFormat {
+        Pdf = "pdf",
+        Html = "html",
+        Markdown = "markdown",
+    }
+}
+string_enum! {
+    /// Which instant starts the sexagenary DAY, which only matters for a birth between 23:00 and 23:59. "midnight" is the classical position of the Ming compendium San Ming Tong Hui: the day turns at 00:00 and 23:00 to 23:59 is the late zi hour of the day that is ending, so the hour stem is taken from that day. "early-zi" turns the whole day at 23:00, the practice in Hong Kong, Taiwan and much of South East Asia. "split-zi" is the compromise most software implements and the default here: the day still turns at 00:00, but the hour stem is taken from the next day. The three give three different answers for a late-evening birth and identical answers for every other birth.
+    BaziReportRequestDayBoundary {
+        SplitZi = "split-zi",
+        Midnight = "midnight",
+        EarlyZi = "early-zi",
+    }
+}
+/// White-label branding for this report. Every field is optional and nothing is stored: send it with each request.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct BaziReportRequestBranding {
+    /// Brand colours. Each one left out keeps the theme colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub colors: Option<BaziReportRequestBrandingColors>,
+    /// Contact email printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub font: Option<BaziReportRequestBrandingFont>,
+    /// Line printed at the foot of every page, such as a disclaimer or a booking note.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    /// HTTPS URL of a PNG, JPEG, WebP or SVG logo under 1 MB, printed on the cover. It is fetched for this report only and never stored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+    /// Business or practitioner name printed on the cover and in the running header of every page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<BaziReportRequestBrandingTheme>,
+    /// Website printed on the cover.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+}
+string_enum! {
+    /// Design preset shared with the RoxyAPI UI components: colours, typefaces and spacing. Left out, the neutral default is used.
+    BaziReportRequestBrandingTheme {
+        Celeste = "celeste",
+        Eucalyptus = "eucalyptus",
+        Kiln = "kiln",
+        Moonlit = "moonlit",
+        Practitioner = "practitioner",
+    }
+}
+string_enum! {
+    /// Font pair for headings and text, the same pairs the RoxyAPI UI components take. Left out, the theme typeface is used.
+    BaziReportRequestBrandingFont {
+        FrauncesJost = "fraunces-jost",
+        Jost = "jost",
+        Geist = "geist",
+        System = "system",
+    }
+}
+/// Brand colours. Each one left out keeps the theme colour.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[non_exhaustive]
+pub struct BaziReportRequestBrandingColors {
+    /// Rules and highlights, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+    /// Headings and table headers, as a six digit hex colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+}
 /// One entry of `cards`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -41736,7 +43522,7 @@ pub struct GetUsageStatsResponse {
     /// Requests left before the monthly allowance is exhausted, floored at zero. Equal to requestsPerMonth minus usedThisMonth. Refills at the calendar month rollover, whose exact instant every API response carries as a Unix timestamp in the X-RateLimit-Reset header.
     #[serde(rename = "remainingThisMonth")]
     pub remaining_this_month: f64,
-    /// Monthly request allowance for the plan. One request, API or MCP, equals one unit: there is no credit weighting and no per domain fee.
+    /// Monthly request allowance for the plan. Every data endpoint call, API or MCP, is one request and a report spends the cost its operation lists in x-request-cost: there is no per domain fee.
     #[serde(rename = "requestsPerMonth")]
     pub requests_per_month: f64,
     /// Subscription lifecycle state. Values: active, cancelled (no longer renewing but usable until endDate), suspended (payment failed, usable until endDate), expired (past endDate), pending (checkout started, payment not captured).
@@ -41911,6 +43697,166 @@ impl YogaDetectRequest {
         self
     }
 }
+impl YearlyForecastReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        year: i64,
+        latitude: f64,
+        longitude: f64,
+        timezone: YearlyForecastReportRequestTimezone,
+    ) -> Self {
+        Self {
+            branding: Default::default(),
+            date,
+            format: Default::default(),
+            house_system: Default::default(),
+            latitude,
+            longitude,
+            page: Default::default(),
+            readings: Default::default(),
+            time,
+            timezone,
+            year,
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: YearlyForecastReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: YearlyForecastReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `houseSystem`.
+    #[must_use]
+    pub fn with_house_system(
+        mut self,
+        value: YearlyForecastReportRequestHouseSystem,
+    ) -> Self {
+        self.house_system = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: YearlyForecastReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+}
+impl YearlyForecastReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: YearlyForecastReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl YearlyForecastReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(
+        mut self,
+        value: YearlyForecastReportRequestBrandingColors,
+    ) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: YearlyForecastReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(
+        mut self,
+        value: YearlyForecastReportRequestBrandingTheme,
+    ) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl YearlyForecastReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
+    }
+}
 impl UpagrahaRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
@@ -42001,6 +43947,371 @@ impl TransitsRequestNatalChart {
             time,
             timezone,
         }
+    }
+}
+impl TarotReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            branding: Default::default(),
+            format: Default::default(),
+            page: Default::default(),
+            question: Default::default(),
+            readings: Default::default(),
+            seed: Default::default(),
+            spread: Default::default(),
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: TarotReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: TarotReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: TarotReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `question`.
+    #[must_use]
+    pub fn with_question(mut self, value: String) -> Self {
+        self.question = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+    /// Sets `seed`.
+    #[must_use]
+    pub fn with_seed(mut self, value: String) -> Self {
+        self.seed = Some(value);
+        self
+    }
+    /// Sets `spread`.
+    #[must_use]
+    pub fn with_spread(mut self, value: TarotReportRequestSpread) -> Self {
+        self.spread = Some(value);
+        self
+    }
+}
+impl TarotReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: TarotReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl TarotReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: TarotReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: TarotReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: TarotReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl TarotReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
+    }
+}
+impl SynastryReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        person1: SynastryReportRequestPerson1,
+        person2: SynastryReportRequestPerson2,
+    ) -> Self {
+        Self {
+            branding: Default::default(),
+            format: Default::default(),
+            house_system: Default::default(),
+            page: Default::default(),
+            person1,
+            person2,
+            readings: Default::default(),
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: SynastryReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: SynastryReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `houseSystem`.
+    #[must_use]
+    pub fn with_house_system(mut self, value: SynastryReportRequestHouseSystem) -> Self {
+        self.house_system = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: SynastryReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+}
+impl SynastryReportRequestPerson2 {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        latitude: f64,
+        longitude: f64,
+        timezone: SynastryReportRequestPerson2Timezone,
+    ) -> Self {
+        Self {
+            date,
+            latitude,
+            longitude,
+            name: Default::default(),
+            node_type: Default::default(),
+            time,
+            timezone,
+        }
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `nodeType`.
+    #[must_use]
+    pub fn with_node_type(
+        mut self,
+        value: SynastryReportRequestPerson2NodeType,
+    ) -> Self {
+        self.node_type = Some(value);
+        self
+    }
+}
+impl SynastryReportRequestPerson1 {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        latitude: f64,
+        longitude: f64,
+        timezone: SynastryReportRequestPerson1Timezone,
+    ) -> Self {
+        Self {
+            date,
+            latitude,
+            longitude,
+            name: Default::default(),
+            node_type: Default::default(),
+            time,
+            timezone,
+        }
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `nodeType`.
+    #[must_use]
+    pub fn with_node_type(
+        mut self,
+        value: SynastryReportRequestPerson1NodeType,
+    ) -> Self {
+        self.node_type = Some(value);
+        self
+    }
+}
+impl SynastryReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: SynastryReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl SynastryReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: SynastryReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: SynastryReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: SynastryReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl SynastryReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
     }
 }
 impl SolarArcRequest {
@@ -42317,6 +44628,155 @@ impl PapasamyamRequestPerson1 {
         self
     }
 }
+impl NumerologyReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(full_name: String, year: i64, month: i64, day: i64) -> Self {
+        Self {
+            branding: Default::default(),
+            current_year: Default::default(),
+            day,
+            format: Default::default(),
+            full_name,
+            month,
+            page: Default::default(),
+            readings: Default::default(),
+            target_date: Default::default(),
+            year,
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: NumerologyReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `currentYear`.
+    #[must_use]
+    pub fn with_current_year(mut self, value: i64) -> Self {
+        self.current_year = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: NumerologyReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: NumerologyReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+    /// Sets `targetDate`.
+    #[must_use]
+    pub fn with_target_date(mut self, value: String) -> Self {
+        self.target_date = Some(value);
+        self
+    }
+}
+impl NumerologyReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: NumerologyReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl NumerologyReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: NumerologyReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: NumerologyReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: NumerologyReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl NumerologyReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
+    }
+}
 impl NavamsaRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
@@ -42349,6 +44809,162 @@ impl NavamsaRequest {
         self
     }
 }
+impl NatalReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        latitude: f64,
+        longitude: f64,
+        timezone: NatalReportRequestTimezone,
+    ) -> Self {
+        Self {
+            branding: Default::default(),
+            date,
+            format: Default::default(),
+            house_system: Default::default(),
+            latitude,
+            longitude,
+            node_type: Default::default(),
+            page: Default::default(),
+            readings: Default::default(),
+            time,
+            timezone,
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: NatalReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: NatalReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `houseSystem`.
+    #[must_use]
+    pub fn with_house_system(mut self, value: NatalReportRequestHouseSystem) -> Self {
+        self.house_system = Some(value);
+        self
+    }
+    /// Sets `nodeType`.
+    #[must_use]
+    pub fn with_node_type(mut self, value: NatalReportRequestNodeType) -> Self {
+        self.node_type = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: NatalReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+}
+impl NatalReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: NatalReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl NatalReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: NatalReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: NatalReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: NatalReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl NatalReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
+    }
+}
 impl NatalChartRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(
@@ -42378,6 +44994,198 @@ impl NatalChartRequest {
     #[must_use]
     pub fn with_node_type(mut self, value: NatalChartRequestNodeType) -> Self {
         self.node_type = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        person1: MatchmakingReportRequestPerson1,
+        person2: MatchmakingReportRequestPerson2,
+    ) -> Self {
+        Self {
+            ayanamsa: Default::default(),
+            ayanamsa_value: Default::default(),
+            branding: Default::default(),
+            format: Default::default(),
+            page: Default::default(),
+            person1,
+            person2,
+            readings: Default::default(),
+        }
+    }
+    /// Sets `ayanamsa`.
+    #[must_use]
+    pub fn with_ayanamsa(mut self, value: MatchmakingReportRequestAyanamsa) -> Self {
+        self.ayanamsa = Some(value);
+        self
+    }
+    /// Sets `ayanamsaValue`.
+    #[must_use]
+    pub fn with_ayanamsa_value(mut self, value: f64) -> Self {
+        self.ayanamsa_value = Some(value);
+        self
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: MatchmakingReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: MatchmakingReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: MatchmakingReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequestPerson2 {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
+        Self {
+            date,
+            latitude,
+            longitude,
+            time,
+            timezone: Default::default(),
+        }
+    }
+    /// Sets `timezone`.
+    #[must_use]
+    pub fn with_timezone(
+        mut self,
+        value: MatchmakingReportRequestPerson2Timezone,
+    ) -> Self {
+        self.timezone = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequestPerson1 {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
+        Self {
+            date,
+            latitude,
+            longitude,
+            time,
+            timezone: Default::default(),
+        }
+    }
+    /// Sets `timezone`.
+    #[must_use]
+    pub fn with_timezone(
+        mut self,
+        value: MatchmakingReportRequestPerson1Timezone,
+    ) -> Self {
+        self.timezone = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: MatchmakingReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: MatchmakingReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: MatchmakingReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: MatchmakingReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl MatchmakingReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
         self
     }
 }
@@ -43306,6 +46114,162 @@ impl LilithRequest {
         self
     }
 }
+impl KundliReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
+        Self {
+            ayanamsa: Default::default(),
+            ayanamsa_value: Default::default(),
+            branding: Default::default(),
+            date,
+            format: Default::default(),
+            latitude,
+            longitude,
+            page: Default::default(),
+            readings: Default::default(),
+            time,
+            timezone: Default::default(),
+        }
+    }
+    /// Sets `ayanamsa`.
+    #[must_use]
+    pub fn with_ayanamsa(mut self, value: KundliReportRequestAyanamsa) -> Self {
+        self.ayanamsa = Some(value);
+        self
+    }
+    /// Sets `ayanamsaValue`.
+    #[must_use]
+    pub fn with_ayanamsa_value(mut self, value: f64) -> Self {
+        self.ayanamsa_value = Some(value);
+        self
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: KundliReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: KundliReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: KundliReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+    /// Sets `timezone`.
+    #[must_use]
+    pub fn with_timezone(mut self, value: KundliReportRequestTimezone) -> Self {
+        self.timezone = Some(value);
+        self
+    }
+}
+impl KundliReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: KundliReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl KundliReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: KundliReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: KundliReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: KundliReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl KundliReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
+        self
+    }
+}
 impl KalsarpaRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(date: String, time: String, latitude: f64, longitude: f64) -> Self {
@@ -43683,6 +46647,165 @@ impl KPChartRequest {
     #[must_use]
     pub fn with_timezone(mut self, value: KPChartRequestTimezone) -> Self {
         self.timezone = Some(value);
+        self
+    }
+}
+impl HumanDesignReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        timezone: HumanDesignReportRequestTimezone,
+    ) -> Self {
+        Self {
+            branding: Default::default(),
+            date,
+            format: Default::default(),
+            latitude: Default::default(),
+            longitude: Default::default(),
+            node_type: Default::default(),
+            page: Default::default(),
+            readings: Default::default(),
+            time,
+            timezone,
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: HumanDesignReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: HumanDesignReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `latitude`.
+    #[must_use]
+    pub fn with_latitude(mut self, value: f64) -> Self {
+        self.latitude = Some(value);
+        self
+    }
+    /// Sets `longitude`.
+    #[must_use]
+    pub fn with_longitude(mut self, value: f64) -> Self {
+        self.longitude = Some(value);
+        self
+    }
+    /// Sets `nodeType`.
+    #[must_use]
+    pub fn with_node_type(mut self, value: HumanDesignReportRequestNodeType) -> Self {
+        self.node_type = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: HumanDesignReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+}
+impl HumanDesignReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: HumanDesignReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl HumanDesignReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: HumanDesignReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: HumanDesignReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: HumanDesignReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl HumanDesignReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
         self
     }
 }
@@ -46273,6 +49396,18 @@ impl GetAlmanacDayParams {
         self
     }
 }
+impl GenerateYearlyForecastReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateYearlyForecastReportParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
 impl GenerateTransitRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(birth_data: GenerateTransitRequestBirthData) -> Self {
@@ -46462,6 +49597,30 @@ impl GenerateTimelineParams {
         self
     }
 }
+impl GenerateTarotReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateTarotReportParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
+impl GenerateSynastryReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateSynastryReportParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
 impl GenerateSolarReturnRequest {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new(
@@ -46596,6 +49755,18 @@ impl GeneratePlanetaryReturnParams {
         self
     }
 }
+impl GenerateNumerologyReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateNumerologyReportParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
 impl GenerateNumerologyChartParams {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new() -> Self {
@@ -46616,6 +49787,18 @@ impl GenerateNavamsaParams {
     /// Sets `lang`.
     #[must_use]
     pub fn with_lang(mut self, value: GenerateNavamsaParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
+impl GenerateNatalReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateNatalReportParamsLang) -> Self {
         self.lang = Some(value);
         self
     }
@@ -46721,6 +49904,18 @@ impl GenerateMayanChartParams {
     /// Sets `lang`.
     #[must_use]
     pub fn with_lang(mut self, value: GenerateMayanChartParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
+impl GenerateMatchmakingReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateMatchmakingReportParamsLang) -> Self {
         self.lang = Some(value);
         self
     }
@@ -46889,6 +50084,18 @@ impl GenerateLilithParams {
         self
     }
 }
+impl GenerateKundliReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateKundliReportParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
 impl GenerateKpChartParams {
     /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
     pub fn new() -> Self {
@@ -46906,6 +50113,18 @@ impl GenerateKpChartParams {
     /// Sets `lang`.
     #[must_use]
     pub fn with_lang(mut self, value: GenerateKpChartParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
+impl GenerateHumanDesignReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateHumanDesignReportParamsLang) -> Self {
         self.lang = Some(value);
         self
     }
@@ -47405,6 +50624,18 @@ impl GenerateBirthChartParams {
     /// Sets `lang`.
     #[must_use]
     pub fn with_lang(mut self, value: GenerateBirthChartParamsLang) -> Self {
+        self.lang = Some(value);
+        self
+    }
+}
+impl GenerateBaziReportParams {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { lang: Default::default() }
+    }
+    /// Sets `lang`.
+    #[must_use]
+    pub fn with_lang(mut self, value: GenerateBaziReportParamsLang) -> Self {
         self.lang = Some(value);
         self
     }
@@ -50878,6 +54109,183 @@ impl BhavChalitRequest {
     #[must_use]
     pub fn with_timezone(mut self, value: BhavChalitRequestTimezone) -> Self {
         self.timezone = Some(value);
+        self
+    }
+}
+impl BaziReportRequest {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new(
+        date: String,
+        time: String,
+        timezone: BaziReportRequestTimezone,
+        gender: BaziReportRequestGender,
+        year: i64,
+    ) -> Self {
+        Self {
+            branding: Default::default(),
+            date,
+            day_boundary: Default::default(),
+            format: Default::default(),
+            gender,
+            hour_clock: Default::default(),
+            latitude: Default::default(),
+            longitude: Default::default(),
+            page: Default::default(),
+            readings: Default::default(),
+            time,
+            timezone,
+            year,
+            year_boundary: Default::default(),
+        }
+    }
+    /// Sets `branding`.
+    #[must_use]
+    pub fn with_branding(mut self, value: BaziReportRequestBranding) -> Self {
+        self.branding = Some(value);
+        self
+    }
+    /// Sets `dayBoundary`.
+    #[must_use]
+    pub fn with_day_boundary(mut self, value: BaziReportRequestDayBoundary) -> Self {
+        self.day_boundary = Some(value);
+        self
+    }
+    /// Sets `format`.
+    #[must_use]
+    pub fn with_format(mut self, value: BaziReportRequestFormat) -> Self {
+        self.format = Some(value);
+        self
+    }
+    /// Sets `hourClock`.
+    #[must_use]
+    pub fn with_hour_clock(mut self, value: BaziReportRequestHourClock) -> Self {
+        self.hour_clock = Some(value);
+        self
+    }
+    /// Sets `latitude`.
+    #[must_use]
+    pub fn with_latitude(mut self, value: f64) -> Self {
+        self.latitude = Some(value);
+        self
+    }
+    /// Sets `longitude`.
+    #[must_use]
+    pub fn with_longitude(mut self, value: f64) -> Self {
+        self.longitude = Some(value);
+        self
+    }
+    /// Sets `page`.
+    #[must_use]
+    pub fn with_page(mut self, value: BaziReportRequestPage) -> Self {
+        self.page = Some(value);
+        self
+    }
+    /// Sets `readings`.
+    #[must_use]
+    pub fn with_readings(mut self, value: bool) -> Self {
+        self.readings = Some(value);
+        self
+    }
+    /// Sets `yearBoundary`.
+    #[must_use]
+    pub fn with_year_boundary(mut self, value: BaziReportRequestYearBoundary) -> Self {
+        self.year_boundary = Some(value);
+        self
+    }
+}
+impl BaziReportRequestPage {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self { size: Default::default() }
+    }
+    /// Sets `size`.
+    #[must_use]
+    pub fn with_size(mut self, value: BaziReportRequestPageSize) -> Self {
+        self.size = Some(value);
+        self
+    }
+}
+impl BaziReportRequestBranding {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            colors: Default::default(),
+            email: Default::default(),
+            font: Default::default(),
+            footer: Default::default(),
+            logo: Default::default(),
+            name: Default::default(),
+            theme: Default::default(),
+            website: Default::default(),
+        }
+    }
+    /// Sets `colors`.
+    #[must_use]
+    pub fn with_colors(mut self, value: BaziReportRequestBrandingColors) -> Self {
+        self.colors = Some(value);
+        self
+    }
+    /// Sets `email`.
+    #[must_use]
+    pub fn with_email(mut self, value: String) -> Self {
+        self.email = Some(value);
+        self
+    }
+    /// Sets `font`.
+    #[must_use]
+    pub fn with_font(mut self, value: BaziReportRequestBrandingFont) -> Self {
+        self.font = Some(value);
+        self
+    }
+    /// Sets `footer`.
+    #[must_use]
+    pub fn with_footer(mut self, value: String) -> Self {
+        self.footer = Some(value);
+        self
+    }
+    /// Sets `logo`.
+    #[must_use]
+    pub fn with_logo(mut self, value: String) -> Self {
+        self.logo = Some(value);
+        self
+    }
+    /// Sets `name`.
+    #[must_use]
+    pub fn with_name(mut self, value: String) -> Self {
+        self.name = Some(value);
+        self
+    }
+    /// Sets `theme`.
+    #[must_use]
+    pub fn with_theme(mut self, value: BaziReportRequestBrandingTheme) -> Self {
+        self.theme = Some(value);
+        self
+    }
+    /// Sets `website`.
+    #[must_use]
+    pub fn with_website(mut self, value: String) -> Self {
+        self.website = Some(value);
+        self
+    }
+}
+impl BaziReportRequestBrandingColors {
+    /// Builds the value from its required fields, in specification order. Add optional fields with the `with_` setters.
+    pub fn new() -> Self {
+        Self {
+            accent: Default::default(),
+            primary: Default::default(),
+        }
+    }
+    /// Sets `accent`.
+    #[must_use]
+    pub fn with_accent(mut self, value: String) -> Self {
+        self.accent = Some(value);
+        self
+    }
+    /// Sets `primary`.
+    #[must_use]
+    pub fn with_primary(mut self, value: String) -> Self {
+        self.primary = Some(value);
         self
     }
 }

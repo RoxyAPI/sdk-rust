@@ -64,6 +64,35 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::YearlyForecastReportRequestPageSize,
+        >(&["A4", "Letter"], types::YearlyForecastReportRequestPageSize::Other);
+    count
+        += check::<
+            types::YearlyForecastReportRequestHouseSystem,
+        >(
+            &["placidus", "whole-sign", "equal", "koch"],
+            types::YearlyForecastReportRequestHouseSystem::Other,
+        );
+    count
+        += check::<
+            types::YearlyForecastReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::YearlyForecastReportRequestFormat::Other);
+    count
+        += check::<
+            types::YearlyForecastReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::YearlyForecastReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::YearlyForecastReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::YearlyForecastReportRequestBrandingFont::Other,
+        );
+    count
+        += check::<
             types::UpagrahaRequestAyanamsa,
         >(
             &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
@@ -73,6 +102,72 @@ pub fn every_enum_value() -> usize {
         += check::<
             types::TransitsRequestNodeType,
         >(&["mean", "true"], types::TransitsRequestNodeType::Other);
+    count
+        += check::<
+            types::TarotReportRequestSpread,
+        >(
+            &["celtic-cross", "three-card", "love", "career"],
+            types::TarotReportRequestSpread::Other,
+        );
+    count
+        += check::<
+            types::TarotReportRequestPageSize,
+        >(&["A4", "Letter"], types::TarotReportRequestPageSize::Other);
+    count
+        += check::<
+            types::TarotReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::TarotReportRequestFormat::Other);
+    count
+        += check::<
+            types::TarotReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::TarotReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::TarotReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::TarotReportRequestBrandingFont::Other,
+        );
+    count
+        += check::<
+            types::SynastryReportRequestPerson2NodeType,
+        >(&["mean", "true"], types::SynastryReportRequestPerson2NodeType::Other);
+    count
+        += check::<
+            types::SynastryReportRequestPerson1NodeType,
+        >(&["mean", "true"], types::SynastryReportRequestPerson1NodeType::Other);
+    count
+        += check::<
+            types::SynastryReportRequestPageSize,
+        >(&["A4", "Letter"], types::SynastryReportRequestPageSize::Other);
+    count
+        += check::<
+            types::SynastryReportRequestHouseSystem,
+        >(
+            &["placidus", "whole-sign", "equal", "koch"],
+            types::SynastryReportRequestHouseSystem::Other,
+        );
+    count
+        += check::<
+            types::SynastryReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::SynastryReportRequestFormat::Other);
+    count
+        += check::<
+            types::SynastryReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::SynastryReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::SynastryReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::SynastryReportRequestBrandingFont::Other,
+        );
     count
         += check::<
             types::SolarArcRequestNodeType,
@@ -208,6 +303,28 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::NumerologyReportRequestPageSize,
+        >(&["A4", "Letter"], types::NumerologyReportRequestPageSize::Other);
+    count
+        += check::<
+            types::NumerologyReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::NumerologyReportRequestFormat::Other);
+    count
+        += check::<
+            types::NumerologyReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::NumerologyReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::NumerologyReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::NumerologyReportRequestBrandingFont::Other,
+        );
+    count
+        += check::<
             types::NavamsaResponseChartMetaAdditionalPropertyNakshatraLord,
         >(
             &[
@@ -246,6 +363,39 @@ pub fn every_enum_value() -> usize {
         >(
             &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
             types::NavamsaRequestAyanamsa::Other,
+        );
+    count
+        += check::<
+            types::NatalReportRequestPageSize,
+        >(&["A4", "Letter"], types::NatalReportRequestPageSize::Other);
+    count
+        += check::<
+            types::NatalReportRequestNodeType,
+        >(&["mean", "true"], types::NatalReportRequestNodeType::Other);
+    count
+        += check::<
+            types::NatalReportRequestHouseSystem,
+        >(
+            &["placidus", "whole-sign", "equal", "koch"],
+            types::NatalReportRequestHouseSystem::Other,
+        );
+    count
+        += check::<
+            types::NatalReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::NatalReportRequestFormat::Other);
+    count
+        += check::<
+            types::NatalReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::NatalReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::NatalReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::NatalReportRequestBrandingFont::Other,
         );
     count
         += check::<
@@ -297,6 +447,35 @@ pub fn every_enum_value() -> usize {
         >(
             &["placidus", "whole-sign", "equal", "koch"],
             types::NatalChartRequestHouseSystem::Other,
+        );
+    count
+        += check::<
+            types::MatchmakingReportRequestPageSize,
+        >(&["A4", "Letter"], types::MatchmakingReportRequestPageSize::Other);
+    count
+        += check::<
+            types::MatchmakingReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::MatchmakingReportRequestFormat::Other);
+    count
+        += check::<
+            types::MatchmakingReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::MatchmakingReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::MatchmakingReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::MatchmakingReportRequestBrandingFont::Other,
+        );
+    count
+        += check::<
+            types::MatchmakingReportRequestAyanamsa,
+        >(
+            &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
+            types::MatchmakingReportRequestAyanamsa::Other,
         );
     count
         += check::<
@@ -723,6 +902,35 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::KundliReportRequestPageSize,
+        >(&["A4", "Letter"], types::KundliReportRequestPageSize::Other);
+    count
+        += check::<
+            types::KundliReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::KundliReportRequestFormat::Other);
+    count
+        += check::<
+            types::KundliReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::KundliReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::KundliReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::KundliReportRequestBrandingFont::Other,
+        );
+    count
+        += check::<
+            types::KundliReportRequestAyanamsa,
+        >(
+            &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
+            types::KundliReportRequestAyanamsa::Other,
+        );
+    count
+        += check::<
             types::KalsarpaResponseSeverity,
         >(&["Mild", "Moderate", "Severe"], types::KalsarpaResponseSeverity::Other);
     count
@@ -938,6 +1146,32 @@ pub fn every_enum_value() -> usize {
         >(
             &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
             types::KPChartRequestAyanamsa::Other,
+        );
+    count
+        += check::<
+            types::HumanDesignReportRequestPageSize,
+        >(&["A4", "Letter"], types::HumanDesignReportRequestPageSize::Other);
+    count
+        += check::<
+            types::HumanDesignReportRequestNodeType,
+        >(&["mean", "true"], types::HumanDesignReportRequestNodeType::Other);
+    count
+        += check::<
+            types::HumanDesignReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::HumanDesignReportRequestFormat::Other);
+    count
+        += check::<
+            types::HumanDesignReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::HumanDesignReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::HumanDesignReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::HumanDesignReportRequestBrandingFont::Other,
         );
     count
         += check::<
@@ -4577,6 +4811,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GenerateYearlyForecastReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateYearlyForecastReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateYearlyForecastReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateYearlyForecastReportParamsLang::Other,
+        );
+    count
+        += check::<
             types::GenerateTransitRequestBirthDataNodeType,
         >(&["mean", "true"], types::GenerateTransitRequestBirthDataNodeType::Other);
     count
@@ -4642,6 +4890,31 @@ pub fn every_enum_value() -> usize {
         >(
             &["en", "tr", "de", "es", "hi", "pt", "fr", "ru", "zh-Hans", "zh-Hant"],
             types::GenerateTimelineParamsLang::Other,
+        );
+    count
+        += check::<
+            types::GenerateTarotReportResponseFormat,
+        >(&["pdf", "html", "markdown"], types::GenerateTarotReportResponseFormat::Other);
+    count
+        += check::<
+            types::GenerateTarotReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateTarotReportParamsLang::Other,
+        );
+    count
+        += check::<
+            types::GenerateSynastryReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateSynastryReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateSynastryReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateSynastryReportParamsLang::Other,
         );
     count
         += check::<
@@ -4916,6 +5189,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GenerateNumerologyReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateNumerologyReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateNumerologyReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateNumerologyReportParamsLang::Other,
+        );
+    count
+        += check::<
             types::GenerateNumerologyChartResponseCoreNumbersSoulUrgeType,
         >(
             &["single", "master"],
@@ -4972,6 +5259,17 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GenerateNatalReportResponseFormat,
+        >(&["pdf", "html", "markdown"], types::GenerateNatalReportResponseFormat::Other);
+    count
+        += check::<
+            types::GenerateNatalReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateNatalReportParamsLang::Other,
+        );
+    count
+        += check::<
             types::GenerateNatalChartParamsLang,
         >(
             &["en", "tr", "de", "es", "hi", "pt", "fr", "ru", "zh-Hans", "zh-Hant"],
@@ -5023,6 +5321,20 @@ pub fn every_enum_value() -> usize {
         >(
             &["en", "tr", "de", "es", "hi", "pt", "fr", "ru", "zh-Hans", "zh-Hant"],
             types::GenerateMayanChartParamsLang::Other,
+        );
+    count
+        += check::<
+            types::GenerateMatchmakingReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateMatchmakingReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateMatchmakingReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateMatchmakingReportParamsLang::Other,
         );
     count
         += check::<
@@ -5198,6 +5510,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GenerateKundliReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateKundliReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateKundliReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateKundliReportParamsLang::Other,
+        );
+    count
+        += check::<
             types::GenerateKpChartParamsLang,
         >(
             &["en", "tr", "de", "es", "hi", "pt", "fr", "ru", "zh-Hans", "zh-Hant"],
@@ -5207,6 +5533,20 @@ pub fn every_enum_value() -> usize {
         += check::<
             types::GenerateKpChartParamsFocus,
         >(&["general", "finance"], types::GenerateKpChartParamsFocus::Other);
+    count
+        += check::<
+            types::GenerateHumanDesignReportResponseFormat,
+        >(
+            &["pdf", "html", "markdown"],
+            types::GenerateHumanDesignReportResponseFormat::Other,
+        );
+    count
+        += check::<
+            types::GenerateHumanDesignReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateHumanDesignReportParamsLang::Other,
+        );
     count
         += check::<
             types::GenerateFlyingStarChartRequestFacing,
@@ -5538,6 +5878,17 @@ pub fn every_enum_value() -> usize {
         += check::<
             types::GenerateBirthChartParamsFocus,
         >(&["general", "finance"], types::GenerateBirthChartParamsFocus::Other);
+    count
+        += check::<
+            types::GenerateBaziReportResponseFormat,
+        >(&["pdf", "html", "markdown"], types::GenerateBaziReportResponseFormat::Other);
+    count
+        += check::<
+            types::GenerateBaziReportParamsLang,
+        >(
+            &["en", "tr", "de", "es", "hi", "pt", "fr", "ru"],
+            types::GenerateBaziReportParamsLang::Other,
+        );
     count
         += check::<
             types::GenerateBaziChartResponseConventionsYearBoundary,
@@ -8153,6 +8504,47 @@ pub fn every_enum_value() -> usize {
         >(
             &["kp-newcomb", "kp-old", "lahiri", "raman", "custom"],
             types::BhavChalitRequestAyanamsa::Other,
+        );
+    count
+        += check::<
+            types::BaziReportRequestYearBoundary,
+        >(&["li-chun", "lunar-new-year"], types::BaziReportRequestYearBoundary::Other);
+    count
+        += check::<
+            types::BaziReportRequestPageSize,
+        >(&["A4", "Letter"], types::BaziReportRequestPageSize::Other);
+    count
+        += check::<
+            types::BaziReportRequestHourClock,
+        >(&["clock", "local-mean", "solar"], types::BaziReportRequestHourClock::Other);
+    count
+        += check::<
+            types::BaziReportRequestGender,
+        >(&["male", "female"], types::BaziReportRequestGender::Other);
+    count
+        += check::<
+            types::BaziReportRequestFormat,
+        >(&["pdf", "html", "markdown"], types::BaziReportRequestFormat::Other);
+    count
+        += check::<
+            types::BaziReportRequestDayBoundary,
+        >(
+            &["split-zi", "midnight", "early-zi"],
+            types::BaziReportRequestDayBoundary::Other,
+        );
+    count
+        += check::<
+            types::BaziReportRequestBrandingTheme,
+        >(
+            &["celeste", "eucalyptus", "kiln", "moonlit", "practitioner"],
+            types::BaziReportRequestBrandingTheme::Other,
+        );
+    count
+        += check::<
+            types::BaziReportRequestBrandingFont,
+        >(
+            &["fraunces-jost", "jost", "geist", "system"],
+            types::BaziReportRequestBrandingFont::Other,
         );
     count
         += check::<
