@@ -84,9 +84,7 @@ jobs:
         run: ./scripts/check
       - name: Verify minimum supported Rust version
         if: steps.plan.outputs.release == 'true'
-        run: |
-          rustup toolchain install 1.88.0 --profile minimal --no-self-update
-          cargo +1.88.0 check --locked --lib
+        run: ./scripts/msrv
       - name: Check registry publication
         id: publication
         if: steps.plan.outputs.release == 'true' && inputs.dry_run != true

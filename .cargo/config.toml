@@ -1,0 +1,5 @@
+# The locks track the newest releases, so fixes needing a newer compiler than
+# rust-version still land. scripts/msrv proves the library on the declared
+# minimum with the lock a consumer on that compiler resolves.
+[resolver]
+incompatible-rust-versions = "allow"

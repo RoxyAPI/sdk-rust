@@ -1,0 +1,15 @@
+#!/bin/sh
+# Compiles the packaged crate on its declared rust-version with an
+# MSRV-aware lock, as a consumer on that compiler resolves it.
+set -eu
+cd "$(dirname "$0")/.."
+msrv=$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' Cargo.toml)
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+rustup toolchain install "$msrv" --profile minimal --no-self-update
+cargo package --locked --allow-dirty --no-verify --target-dir "$work/target"
+mkdir "$work/crate"
+tar -xzf "$work"/target/package/*.crate -C "$work/crate" --strip-components=1
+cd "$work/crate"
+CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo "+$msrv" update
+cargo "+$msrv" check --lib
