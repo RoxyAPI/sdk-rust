@@ -529,9 +529,12 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
     }
     let (analysis, models) = generate_models(model_spec, &parameter_models)?;
     let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    // One function per operation keeps each operation's locals out of the
+    // router's frame, which unoptimized builds would otherwise sum across arms.
     let mut walker = String::from(
-        "pub async fn call(client: &roxyapi::Roxy, operation_id: &str, params: serde_json::Value, body: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> { match operation_id {\n",
+        "pub type Call<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value, Box<dyn std::error::Error>>> + 'a>>;\n\npub fn call<'a>(client: &'a roxyapi::Roxy, operation_id: &str, params: serde_json::Value, body: serde_json::Value) -> Call<'a> { match operation_id {\n",
     );
+    let mut operations = String::new();
     let mut signatures: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (path, method, operation) in &ops {
         let id = operation["operationId"]
@@ -640,7 +643,14 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
         }
         code.push_str("self.0.send(request).await\n}\n");
         groups.entry(group.clone()).or_default().push(code);
-        walker.push_str(&format!("{id:?}=>{{{decode} let result=client.{group_ident}().{name}({}).await?; Ok(serde_json::to_value(result)?) }},\n",call_arguments.join(",")));
+        walker.push_str(&format!("{id:?}=>{name}(client,params,body),\n"));
+        let unused = |used: bool| if used { "" } else { "_" };
+        operations.push_str(&format!(
+            "fn {name}(client: &roxyapi::Roxy, {}params: serde_json::Value, {}body: serde_json::Value) -> Call<'_> {{ Box::pin(async move {{ {decode} let result=client.{group_ident}().{name}({}).await?; Ok(serde_json::to_value(result)?) }}) }}\n",
+            unused(parameters.is_some()),
+            unused(body_name.is_some()),
+            call_arguments.join(",")
+        ));
         signatures.entry(group).or_default().push(format!(
             "| `{id}` | `{}().{}({})` |",
             group_ident,
@@ -652,7 +662,8 @@ fn generate(spec: &Value, repository: &Path, output: &Path) -> Result<()> {
                 .join(", ")
         ));
     }
-    walker.push_str("_=>Err(\"unknown operation\".into()),}}\n");
+    walker.push_str("_=>Box::pin(async { Err(\"unknown operation\".into()) }),}}\n");
+    walker.push_str(&operations);
     let mut source = String::from("use super::types;\nuse crate::client::Core;\n");
     let mut domains = Vec::new();
     let mut method_rows = Vec::new();

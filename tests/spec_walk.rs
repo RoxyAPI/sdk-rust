@@ -149,8 +149,25 @@ fn wire(value: &Value) -> String {
     }
 }
 
-#[tokio::test]
-async fn every_spec_operation_sends_every_declared_field_and_decodes_every_response_field() {
+/// Runs on half the default test-thread stack, so stack growth in the generated
+/// code fails here well before a default thread overflows.
+#[test]
+fn every_spec_operation_sends_every_declared_field_and_decodes_every_response_field() {
+    std::thread::Builder::new()
+        .stack_size(1 << 20)
+        .spawn(|| {
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(walk())
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+async fn walk() {
     let spec: Value = serde_json::from_str(include_str!("../specs/openapi.json")).unwrap();
     let mut count = 0;
     for (path, item) in spec["paths"].as_object().unwrap() {
