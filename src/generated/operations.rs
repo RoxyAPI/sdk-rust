@@ -1,6 +1,6 @@
 use super::types;
 use crate::client::Core;
-/// Western astrology API for natal birth charts, daily, weekly, monthly, and yearly horoscopes with unique content per sign and the dated sky events behind every reading, synastry compatibility scores, composite charts, solar and lunar returns, real-time transit aspects, and moon phases. 4 house systems (Placidus, Koch, Whole Sign, Equal) with accurate tropical ephemeris, aspect-pattern detection (Grand Trine, T-Square, Yod), astrocartography planetary lines, relocation charts, and local space maps for location based astrology, plus classical and professional points like fixed star conjunctions, Arabic lots, the asteroid goddesses (Ceres, Pallas, Juno, Vesta), mean and true Black Moon Lilith, and timing techniques like secondary progressions, solar arc directions, and annual profections. Built for horoscope platforms, astrology dating apps, AI chatbots, wellness products, and zodiac content engines. Schedule future horoscopes by date or by year for editorial workflows, no astronomy expertise needed. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
+/// Western astrology API for natal birth charts with an editorial reading of the whole chart, daily, weekly, monthly, and yearly horoscopes with unique content per sign and the dated sky events behind every reading, synastry compatibility scores, composite charts, solar and lunar returns, real-time transit aspects, and moon phases. 4 house systems (Placidus, Koch, Whole Sign, Equal) with accurate tropical ephemeris, aspect-pattern detection (Grand Trine, T-Square, Yod), astrocartography planetary lines, relocation charts, and local space maps for location based astrology, plus classical and professional points like fixed star conjunctions, Arabic lots, the asteroid goddesses (Ceres, Pallas, Juno, Vesta), mean and true Black Moon Lilith, and timing techniques like secondary progressions, solar arc directions, and annual profections. Built for horoscope platforms, astrology dating apps, AI chatbots, wellness products, and zodiac content engines. Schedule future horoscopes by date or by year for editorial workflows, no astronomy expertise needed. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
 #[derive(Debug, Clone, Copy)]
 pub struct Astrology<'a>(&'a Core);
 impl crate::Roxy {
@@ -340,9 +340,9 @@ impl Astrology<'_> {
         let request = request.json(body);
         self.0.send(request).await
     }
-    /// Generate natal chart - Birth chart calculator API with houses and aspects
+    /// Generate natal chart - Birth chart API with houses, aspects and a written reading
     ///
-    /// Calculate complete Western astrology natal chart (birth chart) with tropical zodiac. Returns all 14 celestial bodies (the 10 classical planets Sun through Pluto, the lunar nodes, Chiron, and Black Moon Lilith), 12 house cusps with customizable house systems (Placidus, Whole Sign, Equal, Koch), major and minor aspects, Ascendant, Midheaven, dominant elements and modalities. Perfect for astrology apps, birth chart generators, horoscope websites, and astrological consultation tools. Verified against NASA JPL Horizons.
+    /// Calculate a Western astrology natal chart (birth chart) with planets, houses, aspects and a written reading for that birth. It returns all 14 celestial bodies in the tropical zodiac (the 10 classical planets Sun through Pluto, the lunar nodes, Chiron and Black Moon Lilith) with sign, house and dignity, 12 house cusps in Placidus, Whole Sign, Equal or Koch, major and minor aspects, Ascendant, Midheaven, and the dominant elements and modalities. Every chart carries an editorial reading written for that birth: an opening synthesis, love, career and home chapters, a closing, and a reading for each planet, aspect, the Ascendant and the Midheaven, in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish. Verified against NASA JPL Horizons.
     ///
     /// `POST /astrology/natal-chart`
     pub async fn generate_natal_chart(
@@ -426,7 +426,7 @@ impl Astrology<'_> {
     }
     /// Generate relocation chart - Relocated birth chart calculator with shifted houses and angles
     ///
-    /// Calculate a relocation chart (relocated birth chart) for a new place on Earth. The birth moment stays the same, so every planet keeps its natal sign and degree, while the Ascendant, Midheaven, Vertex, and all twelve house cusps are recomputed for the new latitude and longitude. Returns the relocated houses and angles, the planets that change house, the angular planets activated at the new place, and the distance and compass direction from the birthplace. Built for relocation astrology readings, astrocartography style move planning, and travel charts. Verified against NASA JPL Horizons.
+    /// Calculate a relocation chart (relocated birth chart) for a new place on Earth. The birth moment stays the same, so every planet keeps its natal sign and degree, while the Ascendant, Midheaven, Vertex, and all twelve house cusps are recomputed for the new latitude and longitude. Returns the relocated houses and angles, the planets that change house with a reading of each planet in its relocated house, the angular planets activated at the new place, and the distance and compass direction from the birthplace. Built for relocation astrology readings, astrocartography style move planning, and travel charts. Verified against NASA JPL Horizons.
     ///
     /// `POST /astrology/relocation-chart`
     pub async fn generate_relocation_chart(
@@ -523,7 +523,7 @@ impl Astrology<'_> {
     }
     /// Daily horoscope by zodiac sign - Transit-based editorial columns
     ///
-    /// A publish-ready column for any zodiac sign, built from the dated transits over it and returned with those events for fact-checking. The reading names the aspects, sign ingresses, lunations and retrograde stations driving it and reads each into the whole-sign houses of that sign, so every sign gets different content rather than one blurb reused twelve times. Alongside the column come overview, love, career, health, finance and advice, the active transits, Moon sign and phase, an energy rating, lucky number and color, and compatible signs. No language model is involved, so a given sign and date always returns the same text and a piece scheduled months ahead is the piece that runs. Content rolls over at midnight, by default UTC. Pass date for editorial scheduling, or timezone to roll over on a local clock. Composed in 8 languages (en, de, es, fr, hi, pt, ru, tr); any other lang code returns English. Daily horoscope API, zodiac forecast, sun sign horoscope, astrology prediction.
+    /// A publish-ready column for any zodiac sign, built from the dated transits over it. Each response returns those events and the standing position of every planet, so every date and claim can be fact-checked. The reading names the aspects, sign ingresses, lunations and retrograde stations driving it and reads each into the whole-sign houses of that sign, so every sign gets different content rather than one blurb reused twelve times. Alongside the column come overview, love, career, health, finance and advice, the active transits, Moon sign and phase, an energy rating, lucky number and color, and compatible signs. No language model is involved, so a given sign and date always returns the same text and a piece scheduled months ahead is the piece that runs. The day is read on a clock you choose, UTC by default, so a transit the evening before in the timezone of the end user is never called today. Pass date for editorial scheduling, or timezone for the local day of the end user. Composed in 8 languages (en, tr, de, es, hi, pt, fr, ru); zh-Hans and zh-Hant read English. Daily horoscope API, zodiac forecast, sun sign horoscope, astrology prediction.
     ///
     /// `GET /astrology/horoscope/{sign}/daily`
     pub async fn get_daily_horoscope(
@@ -577,7 +577,7 @@ impl Astrology<'_> {
     }
     /// Monthly horoscope by zodiac sign - Editorial column with key dates
     ///
-    /// A month-long column for any zodiac sign, plus a week-by-week breakdown and dated key dates a calendar page renders directly. The column names the major aspects, slow-planet sign changes, lunations and stations of the month, and reads each into the whole-sign houses of that sign, and those events come back beside the prose with their exact instants, so a piece can be checked against NASA JPL Horizons or the US Naval Observatory before it runs. Key dates are the real New Moon, Full Moon and retrograde instants, never approximations. Alongside the column come overview, love, career, health, finance and advice. Pass any date inside a month to retrieve that month, or timezone to roll over on a local clock. Composed in 8 languages (en, de, es, fr, hi, pt, ru, tr); any other lang code returns English. Monthly horoscope API, zodiac monthly forecast, astrology monthly prediction.
+    /// A month-long column for any zodiac sign, plus a week-by-week breakdown and dated key dates a calendar page renders directly. The column names the major aspects, slow-planet sign changes, lunations and stations of the month, and reads each into the whole-sign houses of that sign, and those events come back beside the prose with their exact instants, so a piece can be checked against NASA JPL Horizons or the US Naval Observatory before it runs. Key dates are the lunations and eclipses of the month, its retrograde and direct stations and its slow-planet sign changes, each on the day of its real instant and placed in the life area it reaches for that sign. Alongside the column come overview, love, career, health, finance and advice. No language model is involved, so the same sign and month always returns the same text. Pass any date inside a month to retrieve that month, or timezone to roll over on a local clock. Composed in 8 languages (en, tr, de, es, hi, pt, fr, ru); zh-Hans and zh-Hant read English. Monthly horoscope API, zodiac monthly forecast, astrology monthly prediction.
     ///
     /// `GET /astrology/horoscope/{sign}/monthly`
     pub async fn get_monthly_horoscope(
@@ -738,7 +738,7 @@ impl Astrology<'_> {
     }
     /// Get planetary positions - Ephemeris calculator for all planets
     ///
-    /// Calculate accurate tropical zodiac positions for all 14 celestial bodies for any date, time, and location. The bodies are the 10 classical planets Sun through Pluto, the lunar nodes, Chiron, and Black Moon Lilith. Returns longitude, latitude, zodiac sign, degree within sign, daily motion speed, and retrograde status. Perfect for transit tracking, ephemeris tables, astrology apps, and planetary position widgets. Verified against NASA JPL Horizons.
+    /// Calculate accurate tropical zodiac positions for all 14 celestial bodies for any date, time, and location. The bodies are the 10 classical planets Sun through Pluto, the lunar nodes, Chiron, and Black Moon Lilith. Returns longitude, latitude, zodiac sign, degree within sign, daily motion speed, retrograde status, and a reading of each body in its sign. Perfect for transit tracking, ephemeris tables, astrology apps, and planetary position widgets. Verified against NASA JPL Horizons.
     ///
     /// `POST /astrology/planets`
     pub async fn get_planetary_positions(
@@ -786,7 +786,7 @@ impl Astrology<'_> {
     }
     /// Weekly horoscope by zodiac sign - Seven-day editorial column
     ///
-    /// A Monday to Sunday column for any zodiac sign, naming the transits that perfect during the week and the days they fall on. Each event is read into the whole-sign houses of that sign, so content is unique per sign, and the dated events come back beside the prose so an editor can check a piece before it runs. Alongside the column come overview, love, career, health, finance and advice, plus lucky days, lucky numbers and compatible signs. No language model is involved, so the same sign and week always returns the same text. Pass any date inside a week to retrieve that week, or timezone to roll over on a local clock. Composed in 8 languages (en, de, es, fr, hi, pt, ru, tr); any other lang code returns English. Weekly horoscope API, zodiac weekly forecast, astrology weekly prediction.
+    /// A Monday to Sunday column for any zodiac sign, naming the transits that perfect during the week and the days they fall on. Each event is read into the whole-sign houses of that sign, so content is unique per sign, and the dated events come back beside the prose so an editor can check a piece before it runs. Alongside the column come overview, love, career, health, finance and advice, plus lucky days, lucky numbers and compatible signs. No language model is involved, so the same sign and week always returns the same text. Pass any date inside a week to retrieve that week, or timezone to roll over on a local clock. Composed in 8 languages (en, tr, de, es, hi, pt, fr, ru); zh-Hans and zh-Hant read English. Weekly horoscope API, zodiac weekly forecast, astrology weekly prediction.
     ///
     /// `GET /astrology/horoscope/{sign}/weekly`
     pub async fn get_weekly_horoscope(
@@ -819,7 +819,7 @@ impl Astrology<'_> {
     }
     /// Yearly horoscope by zodiac sign - Year ahead forecast with themes, key periods, eclipses and retrogrades
     ///
-    /// Get the year ahead for any zodiac sign, as a long-form column plus the structured arrays a year-ahead page is built from: the slow-body themes that set the backdrop, a dated key period for each of the twelve houses, the best month for love, career, health and finance, and every eclipse and every retrograde and direct station with the house it falls in for this sign. Love, career, health, finance and advice cover the whole year, and the dated events behind the copy come back beside it so an editor can check the piece before it runs. Omit the year for the one in progress, or pass any year from 1900 to 2100 to build an archive or a forecast ahead of time. Yearly horoscope API, year ahead astrology, annual zodiac forecast, eclipse and retrograde calendar.
+    /// Get the year ahead for any zodiac sign, as a long-form column plus the structured arrays a year-ahead page is built from: the slow-body themes that set the backdrop, a dated key period for each of the twelve houses, the best month for love, career, health and finance, and every eclipse and every retrograde and direct station with the house it falls in for this sign. Love, career, health, finance and advice cover the whole year, and the dated events and standing planet positions behind the copy come back beside it so an editor can check the piece before it runs. Omit the year for the one in progress, or pass any year from 1900 to 2100 to build an archive or a forecast ahead of time. Composed in 8 languages (en, tr, de, es, hi, pt, fr, ru); zh-Hans and zh-Hant read English. Yearly horoscope API, year ahead astrology, annual zodiac forecast, eclipse and retrograde calendar.
     ///
     /// `GET /astrology/horoscope/{sign}/yearly`
     pub async fn get_yearly_horoscope(
@@ -907,7 +907,7 @@ impl Astrology<'_> {
         self.0.send(request).await
     }
 }
-/// Vedic astrology (Jyotish) and KP API for kundli generation with the sixteen Shodasavarga divisional charts (D1 to D60), panchang with choghadiya, hora and the classical muhurta windows, kundli matching by Ashtakoot Gun Milan, the South Indian ten porutham with Rajju and Vedha vetoes and Papasamyam, Vimshottari Dasha predictions, dosha detection with remedies, a 301-entry planetary yoga glossary with 48 of them chart-detected and evidenced, and KP horary with 249-level sub-lord analysis. Calculations verified against NASA JPL Horizons at arc-second-level accuracy. Built for matrimonial apps, horoscope platforms, spiritual wellness services, and AI-powered astrology chatbots. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
+/// Vedic astrology (Jyotish) and KP API for kundli generation with an editorial reading of the whole chart, the sixteen Shodasavarga divisional charts (D1 to D60), panchang with choghadiya, hora and the classical muhurta windows, kundli matching by Ashtakoot Gun Milan, the South Indian ten porutham with Rajju and Vedha vetoes and Papasamyam, Vimshottari Dasha predictions, dosha detection with remedies, a 301-entry planetary yoga glossary with 48 of them chart-detected and evidenced, and KP horary with 249-level sub-lord analysis. Calculations verified against NASA JPL Horizons at arc-second-level accuracy. Built for matrimonial apps, horoscope platforms, spiritual wellness services, and AI-powered astrology chatbots. One key covers every RoxyAPI domain, with Remote MCP and typed SDKs.
 #[derive(Debug, Clone, Copy)]
 pub struct VedicAstrology<'a>(&'a Core);
 impl crate::Roxy {
@@ -1271,9 +1271,9 @@ impl VedicAstrology<'_> {
         let request = request.json(body);
         self.0.send(request).await
     }
-    /// Get birth chart (D1 Rashi chart) - Kundli Calculator API
+    /// Get birth chart (D1 Rashi chart) - Kundli API with a written chart reading
     ///
-    /// Calculate complete Vedic birth chart (Janam Kundli, natal chart) with all 9 planetary positions (Sun through Ketu) plus Ascendant (Lagna). Kundli calculator API for astrology apps, matrimonial sites. Returns accurate graha positions grouped by zodiac signs (rashis) with nakshatra details and pada. Perfect for kundli generation, horoscope matching, and Vedic astrology software integration. Rahu and Ketu are the mean lunar node, referred to the true equinox of date, with Ketu exactly opposite Rahu.
+    /// Calculate a Vedic birth chart (Janam Kundli): all 9 grahas, Sun through Ketu, and the Lagna, grouped by rashi with nakshatra and pada. Every chart carries a Vedic chart reading written for that birth: the kundli at a glance, every graha read in its rashi and its nakshatra, and every bhava read from its lord and the grahas it holds, in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish. Rahu and Ketu are the mean lunar node, referred to the true equinox of date, with Ketu exactly opposite Rahu.
     ///
     /// `POST /vedic-astrology/birth-chart`
     pub async fn generate_birth_chart(

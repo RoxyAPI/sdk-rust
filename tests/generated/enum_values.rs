@@ -1606,6 +1606,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GetYearlyHoroscopeResponsePositionsItemDignity,
+        >(
+            &["domicile", "exaltation", "detriment", "fall", "peregrine"],
+            types::GetYearlyHoroscopeResponsePositionsItemDignity::Other,
+        );
+    count
+        += check::<
+            types::GetYearlyHoroscopeResponseFocus,
+        >(
+            &["love", "career", "finance", "health", "overview"],
+            types::GetYearlyHoroscopeResponseFocus::Other,
+        );
+    count
+        += check::<
             types::GetYearlyHoroscopeResponseEventsItemType,
         >(
             &[
@@ -1617,6 +1631,27 @@ pub fn every_enum_value() -> usize {
                 "solar-season",
             ],
             types::GetYearlyHoroscopeResponseEventsItemType::Other,
+        );
+    count
+        += check::<
+            types::GetYearlyHoroscopeResponseEventsItemPhase,
+        >(
+            &["new-moon", "first-quarter", "full-moon", "last-quarter"],
+            types::GetYearlyHoroscopeResponseEventsItemPhase::Other,
+        );
+    count
+        += check::<
+            types::GetYearlyHoroscopeResponseEventsItemKind,
+        >(
+            &["penumbral", "partial", "annular", "total"],
+            types::GetYearlyHoroscopeResponseEventsItemKind::Other,
+        );
+    count
+        += check::<
+            types::GetYearlyHoroscopeResponseEventsItemDirection,
+        >(
+            &["retrograde", "direct"],
+            types::GetYearlyHoroscopeResponseEventsItemDirection::Other,
         );
     count
         += check::<
@@ -1647,6 +1682,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GetWeeklyHoroscopeResponsePositionsItemDignity,
+        >(
+            &["domicile", "exaltation", "detriment", "fall", "peregrine"],
+            types::GetWeeklyHoroscopeResponsePositionsItemDignity::Other,
+        );
+    count
+        += check::<
+            types::GetWeeklyHoroscopeResponseFocus,
+        >(
+            &["love", "career", "finance", "health", "overview"],
+            types::GetWeeklyHoroscopeResponseFocus::Other,
+        );
+    count
+        += check::<
             types::GetWeeklyHoroscopeResponseEventsItemType,
         >(
             &[
@@ -1658,6 +1707,27 @@ pub fn every_enum_value() -> usize {
                 "solar-season",
             ],
             types::GetWeeklyHoroscopeResponseEventsItemType::Other,
+        );
+    count
+        += check::<
+            types::GetWeeklyHoroscopeResponseEventsItemPhase,
+        >(
+            &["new-moon", "first-quarter", "full-moon", "last-quarter"],
+            types::GetWeeklyHoroscopeResponseEventsItemPhase::Other,
+        );
+    count
+        += check::<
+            types::GetWeeklyHoroscopeResponseEventsItemKind,
+        >(
+            &["penumbral", "partial", "annular", "total"],
+            types::GetWeeklyHoroscopeResponseEventsItemKind::Other,
+        );
+    count
+        += check::<
+            types::GetWeeklyHoroscopeResponseEventsItemDirection,
+        >(
+            &["retrograde", "direct"],
+            types::GetWeeklyHoroscopeResponseEventsItemDirection::Other,
         );
     count
         += check::<
@@ -3369,6 +3439,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GetMonthlyHoroscopeResponsePositionsItemDignity,
+        >(
+            &["domicile", "exaltation", "detriment", "fall", "peregrine"],
+            types::GetMonthlyHoroscopeResponsePositionsItemDignity::Other,
+        );
+    count
+        += check::<
+            types::GetMonthlyHoroscopeResponseFocus,
+        >(
+            &["love", "career", "finance", "health", "overview"],
+            types::GetMonthlyHoroscopeResponseFocus::Other,
+        );
+    count
+        += check::<
             types::GetMonthlyHoroscopeResponseEventsItemType,
         >(
             &[
@@ -3380,6 +3464,27 @@ pub fn every_enum_value() -> usize {
                 "solar-season",
             ],
             types::GetMonthlyHoroscopeResponseEventsItemType::Other,
+        );
+    count
+        += check::<
+            types::GetMonthlyHoroscopeResponseEventsItemPhase,
+        >(
+            &["new-moon", "first-quarter", "full-moon", "last-quarter"],
+            types::GetMonthlyHoroscopeResponseEventsItemPhase::Other,
+        );
+    count
+        += check::<
+            types::GetMonthlyHoroscopeResponseEventsItemKind,
+        >(
+            &["penumbral", "partial", "annular", "total"],
+            types::GetMonthlyHoroscopeResponseEventsItemKind::Other,
+        );
+    count
+        += check::<
+            types::GetMonthlyHoroscopeResponseEventsItemDirection,
+        >(
+            &["retrograde", "direct"],
+            types::GetMonthlyHoroscopeResponseEventsItemDirection::Other,
         );
     count
         += check::<
@@ -3987,6 +4092,20 @@ pub fn every_enum_value() -> usize {
         );
     count
         += check::<
+            types::GetDailyHoroscopeResponsePositionsItemDignity,
+        >(
+            &["domicile", "exaltation", "detriment", "fall", "peregrine"],
+            types::GetDailyHoroscopeResponsePositionsItemDignity::Other,
+        );
+    count
+        += check::<
+            types::GetDailyHoroscopeResponseFocus,
+        >(
+            &["love", "career", "finance", "health", "overview"],
+            types::GetDailyHoroscopeResponseFocus::Other,
+        );
+    count
+        += check::<
             types::GetDailyHoroscopeResponseEventsItemType,
         >(
             &[
@@ -3998,6 +4117,27 @@ pub fn every_enum_value() -> usize {
                 "solar-season",
             ],
             types::GetDailyHoroscopeResponseEventsItemType::Other,
+        );
+    count
+        += check::<
+            types::GetDailyHoroscopeResponseEventsItemPhase,
+        >(
+            &["new-moon", "first-quarter", "full-moon", "last-quarter"],
+            types::GetDailyHoroscopeResponseEventsItemPhase::Other,
+        );
+    count
+        += check::<
+            types::GetDailyHoroscopeResponseEventsItemKind,
+        >(
+            &["penumbral", "partial", "annular", "total"],
+            types::GetDailyHoroscopeResponseEventsItemKind::Other,
+        );
+    count
+        += check::<
+            types::GetDailyHoroscopeResponseEventsItemDirection,
+        >(
+            &["retrograde", "direct"],
+            types::GetDailyHoroscopeResponseEventsItemDirection::Other,
         );
     count
         += check::<

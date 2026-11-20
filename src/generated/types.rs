@@ -1519,7 +1519,7 @@ pub struct RelocationPlanetInterpretation {
     pub detailed: String,
     /// Key themes for this relocated placement.
     pub keywords: Vec<String>,
-    /// One-sentence interpretation of this planet in its sign and relocated house.
+    /// The placement in brief: what this body does in its natal sign and in its relocated house.
     pub summary: String,
 }
 /// Relocated Midheaven (MC). The highest point of the ecliptic at the new place, tied to career and public image there.
@@ -2746,6 +2746,9 @@ pub struct NatalChartResponse {
     pub house_system: String,
     /// All 12 house cusps with zodiac positions. House cusps divide the chart into life areas.
     pub houses: Vec<NatalChartResponseHousesItem>,
+    /// Whole-chart natal interpretation. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interpretation: Option<NatalChartResponseInterpretation>,
     /// Midheaven (MC). The highest point of the ecliptic at birth, representing career direction and public image.
     pub midheaven: NatalChartResponseMidheaven,
     /// Part of Fortune (Lot of Fortune). A point derived from the Ascendant and the two luminaries that marks an area of ease, vitality, and material wellbeing in the chart.
@@ -2842,7 +2845,7 @@ pub struct NatalChartResponsePlanetsItem {
     pub dignity: Option<NatalChartResponsePlanetsItemDignity>,
     /// House placement (1-12) based on the selected house system.
     pub house: f64,
-    /// Planet-in-sign-in-house interpretation. Narrative analysis of what this placement means in the natal chart.
+    /// Reading of this body in its sign and house for this chart, in the requested language.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interpretation: Option<NatalChartResponsePlanetsItemInterpretation>,
     /// Whether the planet is in retrograde motion.
@@ -2865,15 +2868,15 @@ pub struct NatalChartResponsePlanetsItem {
     /// Daily motion in degrees per day. Negative values indicate retrograde.
     pub speed: f64,
 }
-/// Planet-in-sign-in-house interpretation. Narrative analysis of what this placement means in the natal chart.
+/// Reading of this body in its sign and house for this chart, in the requested language.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct NatalChartResponsePlanetsItemInterpretation {
-    /// Multi-sentence detailed interpretation with personality insights.
+    /// The full reading of this placement: its sign and house, and where they apply its dignity, retrograde motion, the Moon phase at birth, a nearby angle and its tightest aspect.
     pub detailed: String,
     /// Key personality traits and themes for this placement.
     pub keywords: Vec<String>,
-    /// One-sentence interpretation of this planet in its sign and house placement.
+    /// The placement in brief: what this body does in its sign and in its house, written for this chart.
     pub summary: String,
 }
 string_enum! {
@@ -2907,7 +2910,7 @@ pub struct NatalChartResponsePatternsItem {
     /// Variables that were interpolated into the interpretation template. Names already resolved to the requested language where appropriate.
     #[serde(rename = "interpretationVars")]
     pub interpretation_vars: NatalChartResponsePatternsItemInterpretationVars,
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     pub kind: NatalChartResponsePatternsItemKind,
     /// Dominant modality for tension-based patterns (T-Square, Grand Cross). Cardinal initiates, Fixed sustains, Mutable adapts.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2928,7 +2931,7 @@ string_enum! {
     }
 }
 string_enum! {
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     NatalChartResponsePatternsItemKind {
         GrandTrine = "GRAND_TRINE",
         Kite = "KITE",
@@ -2987,6 +2990,9 @@ string_enum! {
 pub struct NatalChartResponseMidheaven {
     /// Degree within the Midheaven sign (0-29.999).
     pub degree: f64,
+    /// Interpretation of the Midheaven sign: your public direction and the work you want to be known for. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interpretation: Option<NatalChartResponseMidheavenInterpretation>,
     /// Absolute ecliptic longitude of the Midheaven (0-360).
     pub longitude: f64,
     /// Zodiac sign on the Midheaven (MC). Always English, whatever the lang parameter says. Use signLocalized for anything a reader sees.
@@ -2994,6 +3000,30 @@ pub struct NatalChartResponseMidheaven {
     /// Midheaven sign name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
     pub sign_localized: Option<String>,
+}
+/// Interpretation of the Midheaven sign: your public direction and the work you want to be known for. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct NatalChartResponseMidheavenInterpretation {
+    /// A paragraph on the Midheaven sign: your public direction and the work you want to be known for: the strengths it brings, the habit to watch and how it shows in daily life.
+    pub detailed: String,
+    /// One-sentence read of the Midheaven sign: your public direction and the work you want to be known for.
+    pub summary: String,
+}
+/// Whole-chart natal interpretation. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct NatalChartResponseInterpretation {
+    /// Career chapter connecting the tenth-house ruler and occupants with the Midheaven sign.
+    pub career: String,
+    /// Closing synthesis returning to the central drives, their integration and the chart signature.
+    pub closing: String,
+    /// Home chapter connecting the fourth-house ruler and occupants with the IC sign and private foundations.
+    pub home: String,
+    /// Relationships chapter connecting the seventh-house ruler and occupants with the Venus-Mars relationship.
+    pub love: String,
+    /// Whole-chart natal reading connecting the Sun, Moon, Ascendant, central signature and the tension that shapes their expression.
+    pub opening: String,
 }
 /// One entry of `houses`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -3030,9 +3060,9 @@ pub struct NatalChartResponseBirthDetails {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct NatalChartResponseAspectsInterpretation {
-    /// Count of challenging aspects (square, opposition).
+    /// Count of challenging aspects (square, opposition, quincunx).
     pub challenging: f64,
-    /// Whether the chart is predominantly harmonious, challenging, or balanced.
+    /// Which way this chart leans, read from the harmonious and challenging counts beside it against how many of each a typical chart holds: harmonious, challenging or balanced. Always English, whatever the lang parameter says; the summary states the same lean in the requested language.
     pub dominant: String,
     /// Count of harmonious aspects (trine, sextile).
     pub harmonious: f64,
@@ -3081,7 +3111,7 @@ pub struct NatalChartResponseAspectsItem {
 pub struct NatalChartResponseAspectsItemAspectInterpretation {
     /// Themes this aspect activates between the two bodies. Translated in place, so they arrive in the requested language.
     pub keywords: Vec<String>,
-    /// One-sentence read of THIS pair: which two bodies, how tight the aspect is, whether it is applying or separating, and how it is classified. Translated in place, so it arrives in the requested language.
+    /// Short read of THIS pair of bodies as the aspect joins them in this chart. Type, orb, strength and motion stay in the fields beside it. Translated in place, so it arrives in the requested language.
     pub summary: String,
 }
 /// Ascendant (rising sign). The eastern horizon at birth, defining outward personality and physical appearance.
@@ -3090,6 +3120,9 @@ pub struct NatalChartResponseAspectsItemAspectInterpretation {
 pub struct NatalChartResponseAscendant {
     /// Degree within the Ascendant sign (0-29.999).
     pub degree: f64,
+    /// Interpretation of the rising sign: how you meet the world and how others first meet you. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interpretation: Option<NatalChartResponseAscendantInterpretation>,
     /// Absolute ecliptic longitude of the Ascendant (0-360).
     pub longitude: f64,
     /// Zodiac sign on the Ascendant (rising sign). Always English, whatever the lang parameter says. Use signLocalized for anything a reader sees.
@@ -3097,6 +3130,15 @@ pub struct NatalChartResponseAscendant {
     /// Ascendant sign name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
     pub sign_localized: Option<String>,
+}
+/// Interpretation of the rising sign: how you meet the world and how others first meet you. Present when lang is one the natal engine writes (English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish); absent otherwise.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct NatalChartResponseAscendantInterpretation {
+    /// A paragraph on the rising sign: how you meet the world and how others first meet you: the strengths it brings, the habit to watch and how it shows in daily life.
+    pub detailed: String,
+    /// One-sentence read of the rising sign: how you meet the world and how others first meet you.
+    pub summary: String,
 }
 /// Request body of `generateNatalChart`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -9914,39 +9956,43 @@ string_enum! {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetYearlyHoroscopeResponse {
-    /// The single actionable takeaway from the leading event of the period, read into the whole-sign houses of this sign and checkable against the events array. Drawn from the same event as overview, kept to a short, actionable pair of sentences rather than grown to match the other sections. Deterministic: the same sign and period always returns the same text.
+    /// The single actionable takeaway of the period. It opens on the event of the year that most reaches travel, belief, conversation and daily learning, or on a quiet year a standing planet, naming the bodies, the aspect and the life area, then a situation with a way through it, a conditional with a few options, and a close, in the shape of the five fields beside it. Deterministic: the same sign and period always returns the same text.
     pub advice: String,
     /// The easiest month of the year for each of the four topic sections, by how many exact harmonious aspects (sextiles and trines) fall in that month and land in the houses that govern the area for this sign. An area is omitted only in the rare year that carries no harmonious aspect for it at all, so treat each key as optional. Use it for the best-months-for panel, and read the count as the evidence behind the word best.
     #[serde(rename = "bestPeriods")]
     pub best_periods: GetYearlyHoroscopeResponseBestPeriods,
-    /// Yearly career and professional outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to career, work and reputation, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries career, work and reputation, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 150 to 260 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Yearly career and professional outlook, read into the whole-sign houses of this sign. It opens on the event of the year that most reaches career, work and reputation, dated, or on a quiet year a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries career, work and reputation; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub career: String,
-    /// The full column for this period, ready to run as one piece, with paragraphs separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 600 to 900 words. The six section fields read the same ranked events filtered to their own life area, each composed as a column of its own rather than an excerpt of this one, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
+    /// The full column for this period, ready to run as one piece, its paragraphs, where it has more than one, separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 190 to 320 words. The six section fields each open on an event or standing planet of their own read through their life area, the one named in focus on the lead of this column, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
     pub column: String,
-    /// Most compatible zodiac signs for this sign. Trine partners (same element) followed by a sextile partner (complementary element).
+    /// Three zodiac signs most in tune with this sign this year, best first. Read from the real sky of the period, so the list moves with the transits instead of repeating a fixed table, and every pick can be traced in positions\[\]. On a quiet sky it settles on the classic element partners. For the fixed sign-to-sign pairing, read compatibleSigns from the signs endpoint.
     #[serde(rename = "compatibleSigns")]
     pub compatible_signs: Vec<String>,
     /// Every solar and lunar eclipse of the year, with the house each one falls in for this sign. Usually four to six, and the dates match the published eclipse canon.
     pub eclipses: Vec<GetYearlyHoroscopeResponseEclipsesItem>,
     /// The dated astronomical events this reading is built on, earliest first. Every field in every row can be checked against an independent authority, so a column can be fact-checked before it is published. Empty on a period in which nothing exact happens, where the reading falls back to the standing positions instead.
     pub events: Vec<GetYearlyHoroscopeResponseEventsItem>,
-    /// Yearly financial outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to finance, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries finance, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 150 to 260 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Yearly financial outlook, read into the whole-sign houses of this sign. It opens on the event of the year that most reaches finance, dated, or on a quiet year a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries finance; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub finance: String,
-    /// Yearly health, energy, and wellness outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to health, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries health, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 150 to 260 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    pub focus: GetYearlyHoroscopeResponseFocus,
+    /// Yearly health, energy, and wellness outlook, read into the whole-sign houses of this sign. It opens on the event of the year that most reaches health, dated, or on a quiet year a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries health; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub health: String,
     /// The year as a calendar of life areas: for each whole-sign house, the single dated stretch that most strongly activates it, ordered by start date. Twelve rows in a full year, one per house, so every life area gets a date range and none is named twice. Periods overlap freely, because more than one body is always moving. Use it for the dates-to-circle panel of a year-ahead page.
     #[serde(rename = "keyPeriods")]
     pub key_periods: Vec<GetYearlyHoroscopeResponseKeyPeriodsItem>,
-    /// Yearly love and relationship outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to romance and partnership, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries romance and partnership, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 150 to 260 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Yearly love and relationship outlook, read into the whole-sign houses of this sign. It opens on the event of the year that most reaches romance and partnership, dated, or on a quiet year a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries romance and partnership; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub love: String,
-    /// Lucky color for the year, drawn from the three colors of the sign element and selected by the planet governing the reading.
+    /// Lucky color for the year, the color traditionally ruled by the planet that governs this sign this year: Sun gold, Moon silver, Mercury light blue, Venus green, Mars red, Jupiter purple, Saturn brown. When Uranus, Neptune or Pluto governs, the next most governing of the seven classical planets gives the color. Translated with the lang parameter.
     #[serde(rename = "luckyColor")]
     pub lucky_color: String,
     /// Four lucky numbers for the year, each 1 to 9 and all distinct, from the traditional planetary number correspondence applied to the four planets that govern this sign this year.
     #[serde(rename = "luckyNumbers")]
     pub lucky_numbers: Vec<f64>,
-    /// The single most relevant event of the period, whichever life area it touches, read into the whole-sign houses of this sign. The same event that leads column, at lede length rather than developed into a full movement, and checkable against the events array. Typically 70 to 120 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
+    /// The event of the year that most reaches home, roots and the self, or on a quiet year a standing planet, written as the five topic fields are and opening on the lead of column whenever focus is overview. Typically 35 to 90 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
     pub overview: String,
+    /// Where each of the ten bodies stands for this reading, one row per body, so every standing claim in the prose (a body in a house, until a date, retrograde until it turns direct, exalted or at home) can be checked against the response itself. It carries state only: every aspect, lunation, eclipse, ingress or station of the period is a row of events\[\]. Against events\[\], it adds the bodies that do nothing exact in the period (events\[\] names only what happens), the entry and exit of the sign each stands in (events\[\].through carries an exit only for an ingress inside the period), the instant a retrograde body turns direct, and dignity. Against activeTransits, which the daily prints as translated strings for the seven visible bodies, it adds Uranus, Neptune and Pluto, the lowercase sign and numeric house as values, the retrograde flag as a boolean, and the three instants. Where an instant appears in both keys it is the same string. Never translated.
+    pub positions: Vec<GetYearlyHoroscopeResponsePositionsItem>,
     /// Every retrograde and direct station of the year, in order, with the house each falls in for this sign. Drives review windows and the not-yet warnings a yearly column is bought for.
     pub retrogrades: Vec<GetYearlyHoroscopeResponseRetrogradesItem>,
     /// Zodiac sign for this horoscope.
@@ -9988,6 +10034,41 @@ pub struct GetYearlyHoroscopeResponseRetrogradesItem {
     /// What that house governs, so the station reads as a life area rather than a coordinate.
     pub theme: String,
 }
+/// One entry of `positions`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetYearlyHoroscopeResponsePositionsItem {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    pub dignity: GetYearlyHoroscopeResponsePositionsItemDignity,
+    /// Instant the body entered this sign, to the second, on the same clock as events\[\].at. Where the entry is also a row of events\[\] in this response it is that row at, byte for byte. Absent only where the entry lies too far back to date.
+    #[serde(rename = "enteredAt", skip_serializing_if = "Option::is_none")]
+    pub entered_at: Option<String>,
+    /// Whole-sign house that sign is for the queried sign, 1 to 12, counted as events\[\].house is.
+    pub house: i64,
+    /// Whether the body moves retrograde at that noon. Same key as planets\[\].isRetrograde on the natal chart; the daily activeTransits prints the same flag as a translated string.
+    #[serde(rename = "isRetrograde")]
+    pub is_retrograde: bool,
+    /// Instant the body next leaves this sign, to the second, on the same clock as events\[\].at: the date a column prints in until April 15. Where it is also in events\[\] (the ingress that ends the stay, or the through of the ingress that began it) it is that string, byte for byte. Absent only where the exit lies too far ahead to date.
+    #[serde(rename = "leavesAt", skip_serializing_if = "Option::is_none")]
+    pub leaves_at: Option<String>,
+    /// Body, canonical English regardless of the requested language: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune or Pluto, in that order, one row each. Same key and values as planets\[\].name on the natal chart.
+    pub name: String,
+    /// Sign the body stands in at noon on the first day of the period on the reader clock, lowercase like events\[\].sign, never translated.
+    pub sign: String,
+    /// Instant the body next turns direct, to the second, on the same clock as events\[\].at, present only while isRetrograde is true: the date a retrograde is dated by in the prose. Where the station is also in events\[\] it is that row at or through, byte for byte. Absent only where the turn lies too far ahead to date.
+    #[serde(rename = "turnsDirectAt", skip_serializing_if = "Option::is_none")]
+    pub turns_direct_at: Option<String>,
+}
+string_enum! {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    GetYearlyHoroscopeResponsePositionsItemDignity {
+        Domicile = "domicile",
+        Exaltation = "exaltation",
+        Detriment = "detriment",
+        Fall = "fall",
+        Peregrine = "peregrine",
+    }
+}
 /// One entry of `keyPeriods`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -10003,6 +10084,16 @@ pub struct GetYearlyHoroscopeResponseKeyPeriodsItem {
     /// Date the period closes, in UTC (YYYY-MM-DD), which is the day the body leaves that sign. A period that opens late in the year closes in the next one, by at most about three months, so a reader knows what they are still in on January 1.
     pub to: String,
 }
+string_enum! {
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    GetYearlyHoroscopeResponseFocus {
+        Love = "love",
+        Career = "career",
+        Finance = "finance",
+        Health = "health",
+        Overview = "overview",
+    }
+}
 /// One entry of `events`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -10010,16 +10101,27 @@ pub struct GetYearlyHoroscopeResponseEventsItem {
     /// Angle formed, on aspect events only: conjunction, sextile, square, trine, opposition, semi-sextile, quincunx, semi-square, or sesquiquadrate.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aspect: Option<String>,
-    /// Exact instant the event perfects, UTC, to the second. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
+    /// Exact instant the event perfects, ISO 8601 to the second, on the clock the reading is read on: UTC with Z by default, the offset of timezone when one is passed on a daily, weekly or monthly reading (2026-11-13T19:27:27-05:00 in New York), the same instant either way; a yearly reading is written in UTC. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
     pub at: String,
     /// Bodies involved, canonical English regardless of the requested language so the value stays safe to switch on. Two entries for an aspect, faster body first. One entry for an ingress, a station, a lunar phase, or an eclipse.
     pub bodies: Vec<String>,
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub direction: Option<GetYearlyHoroscopeResponseEventsItemDirection>,
     /// Whole-sign house the event falls in, counted from the queried sign, 1 to 12. This is what turns one global sky event into a statement about this reader.
     pub house: i64,
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<GetYearlyHoroscopeResponseEventsItemKind>,
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<GetYearlyHoroscopeResponseEventsItemPhase>,
+    /// Each participant at the enclosing event timestamp, in bodies order: two entries for an aspect and one for every other event. Names and signs stay canonical English in every language. Each entry carries its own whole-sign house, including the second body of an aspect. Event placements can differ from positions, which reports noon on the first day of the period.
+    pub placements: Vec<GetYearlyHoroscopeResponseEventsItemPlacementsItem>,
     /// Sign the event falls in, lowercase, where it has exactly one. Absent for an aspect whose two bodies stand in different signs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sign: Option<String>,
-    /// End of the window this event holds open, UTC, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
+    /// End of the window this event holds open, on the same clock as at, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub through: Option<String>,
     /// Kind of event. aspect is an exact angle between two moving bodies, sign-ingress a body entering a new sign, retrograde-station a body turning retrograde or direct, lunar-phase one of the four quarters, eclipse a solar or lunar eclipse, and solar-season the Sun entering a sign.
@@ -10034,6 +10136,42 @@ string_enum! {
         LunarPhase = "lunar-phase",
         Eclipse = "eclipse",
         SolarSeason = "solar-season",
+    }
+}
+/// One entry of `placements`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetYearlyHoroscopeResponseEventsItemPlacementsItem {
+    /// Whole-sign house this body occupies at the event instant, counted from the queried sign, 1 to 12.
+    pub house: i64,
+    /// Body name, canonical English in every language. Matches the entry at the same index in bodies.
+    pub name: String,
+    /// Sign this body occupies at the event timestamp, lowercase and never translated. For a sign change, the sign entered.
+    pub sign: String,
+}
+string_enum! {
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    GetYearlyHoroscopeResponseEventsItemPhase {
+        NewMoon = "new-moon",
+        FirstQuarter = "first-quarter",
+        FullMoon = "full-moon",
+        LastQuarter = "last-quarter",
+    }
+}
+string_enum! {
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    GetYearlyHoroscopeResponseEventsItemKind {
+        Penumbral = "penumbral",
+        Partial = "partial",
+        Annular = "annular",
+        Total = "total",
+    }
+}
+string_enum! {
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    GetYearlyHoroscopeResponseEventsItemDirection {
+        Retrograde = "retrograde",
+        Direct = "direct",
     }
 }
 /// One entry of `eclipses`.
@@ -10162,22 +10300,24 @@ string_enum! {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetWeeklyHoroscopeResponse {
-    /// The single actionable takeaway from the leading event of the period, read into the whole-sign houses of this sign and checkable against the events array. Drawn from the same event as overview, kept to a short, actionable pair of sentences rather than grown to match the other sections. Deterministic: the same sign and period always returns the same text.
+    /// The single actionable takeaway of the period. It opens on the event of the week that most reaches travel, belief, conversation and daily learning, or on a quiet week a standing planet, naming the bodies, the aspect and the life area, then a situation with a way through it, a conditional with a few options, and a close, in the shape of the five fields beside it. Deterministic: the same sign and period always returns the same text.
     pub advice: String,
-    /// Weekly career and professional outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to career, work and reputation, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries career, work and reputation, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Weekly career and professional outlook, read into the whole-sign houses of this sign. It opens on the event of the week that most reaches career, work and reputation, dated by its day, or on a quiet week a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries career, work and reputation; the aggregate event house remains the leading body house. Typically 120 to 160 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub career: String,
-    /// The full column for this period, ready to run as one piece, with paragraphs separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 250 to 450 words. The six section fields read the same ranked events filtered to their own life area, each composed as a column of its own rather than an excerpt of this one, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
+    /// The full column for this period, ready to run as one piece, its paragraphs, where it has more than one, separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 120 to 160 words. The six section fields each open on an event or standing planet of their own read through their life area, the one named in focus on the lead of this column, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
     pub column: String,
-    /// Most compatible zodiac signs for this sign. Trine partners (same element) followed by a sextile partner (complementary element).
+    /// Three zodiac signs most in tune with this sign this week, best first. Read from the real sky of the period, so the list moves with the transits instead of repeating a fixed table, and every pick can be traced in positions\[\]. On a quiet sky it settles on the classic element partners. For the fixed sign-to-sign pairing, read compatibleSigns from the signs endpoint.
     #[serde(rename = "compatibleSigns")]
     pub compatible_signs: Vec<String>,
     /// The dated astronomical events this reading is built on, earliest first. Every field in every row can be checked against an independent authority, so a column can be fact-checked before it is published. Empty on a period in which nothing exact happens, where the reading falls back to the standing positions instead.
     pub events: Vec<GetWeeklyHoroscopeResponseEventsItem>,
-    /// Weekly financial outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to finance, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries finance, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Weekly financial outlook, read into the whole-sign houses of this sign. It opens on the event of the week that most reaches finance, dated by its day, or on a quiet week a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries finance; the aggregate event house remains the leading body house. Typically 120 to 160 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub finance: String,
-    /// Weekly health, energy, and wellness guidance, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to health, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries health, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    pub focus: GetWeeklyHoroscopeResponseFocus,
+    /// Weekly health, energy, and wellness guidance, read into the whole-sign houses of this sign. It opens on the event of the week that most reaches health, dated by its day, or on a quiet week a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries health; the aggregate event house remains the leading body house. Typically 120 to 160 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub health: String,
-    /// Weekly love and relationship forecast, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to romance and partnership, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries romance and partnership, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Weekly love and relationship forecast, read into the whole-sign houses of this sign. It opens on the event of the week that most reaches romance and partnership, dated by its day, or on a quiet week a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries romance and partnership; the aggregate event house remains the leading body house. Typically 120 to 160 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub love: String,
     /// The three most favorable days this week, from the planetary rulers of the seven weekdays, ranked by how strongly each of those planets stands for this sign.
     #[serde(rename = "luckyDays")]
@@ -10185,12 +10325,59 @@ pub struct GetWeeklyHoroscopeResponse {
     /// Three lucky numbers for the week, each 1 to 9 and all distinct, from the traditional planetary number correspondence applied to the three planets that govern this sign this week.
     #[serde(rename = "luckyNumbers")]
     pub lucky_numbers: Vec<f64>,
-    /// The single most relevant event of the period, whichever life area it touches, read into the whole-sign houses of this sign. The same event that leads column, at lede length rather than developed into a full movement, and checkable against the events array. Typically 40 to 80 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
+    /// The event of the week that most reaches home, roots and the self, or on a quiet week a standing planet, written as the five topic fields are and opening on the lead of column whenever focus is overview. Typically 120 to 160 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
     pub overview: String,
+    /// Where each of the ten bodies stands for this reading, one row per body, so every standing claim in the prose (a body in a house, until a date, retrograde until it turns direct, exalted or at home) can be checked against the response itself. It carries state only: every aspect, lunation, eclipse, ingress or station of the period is a row of events\[\]. Against events\[\], it adds the bodies that do nothing exact in the period (events\[\] names only what happens), the entry and exit of the sign each stands in (events\[\].through carries an exit only for an ingress inside the period), the instant a retrograde body turns direct, and dignity. Against activeTransits, which the daily prints as translated strings for the seven visible bodies, it adds Uranus, Neptune and Pluto, the lowercase sign and numeric house as values, the retrograde flag as a boolean, and the three instants. Where an instant appears in both keys it is the same string. Never translated.
+    pub positions: Vec<GetWeeklyHoroscopeResponsePositionsItem>,
     /// Zodiac sign for this horoscope.
     pub sign: String,
     /// Start date of the forecast week (Monday).
     pub week: String,
+}
+/// One entry of `positions`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetWeeklyHoroscopeResponsePositionsItem {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    pub dignity: GetWeeklyHoroscopeResponsePositionsItemDignity,
+    /// Instant the body entered this sign, to the second, on the same clock as events\[\].at. Where the entry is also a row of events\[\] in this response it is that row at, byte for byte. Absent only where the entry lies too far back to date.
+    #[serde(rename = "enteredAt", skip_serializing_if = "Option::is_none")]
+    pub entered_at: Option<String>,
+    /// Whole-sign house that sign is for the queried sign, 1 to 12, counted as events\[\].house is.
+    pub house: i64,
+    /// Whether the body moves retrograde at that noon. Same key as planets\[\].isRetrograde on the natal chart; the daily activeTransits prints the same flag as a translated string.
+    #[serde(rename = "isRetrograde")]
+    pub is_retrograde: bool,
+    /// Instant the body next leaves this sign, to the second, on the same clock as events\[\].at: the date a column prints in until April 15. Where it is also in events\[\] (the ingress that ends the stay, or the through of the ingress that began it) it is that string, byte for byte. Absent only where the exit lies too far ahead to date.
+    #[serde(rename = "leavesAt", skip_serializing_if = "Option::is_none")]
+    pub leaves_at: Option<String>,
+    /// Body, canonical English regardless of the requested language: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune or Pluto, in that order, one row each. Same key and values as planets\[\].name on the natal chart.
+    pub name: String,
+    /// Sign the body stands in at noon on the first day of the period on the reader clock, lowercase like events\[\].sign, never translated.
+    pub sign: String,
+    /// Instant the body next turns direct, to the second, on the same clock as events\[\].at, present only while isRetrograde is true: the date a retrograde is dated by in the prose. Where the station is also in events\[\] it is that row at or through, byte for byte. Absent only where the turn lies too far ahead to date.
+    #[serde(rename = "turnsDirectAt", skip_serializing_if = "Option::is_none")]
+    pub turns_direct_at: Option<String>,
+}
+string_enum! {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    GetWeeklyHoroscopeResponsePositionsItemDignity {
+        Domicile = "domicile",
+        Exaltation = "exaltation",
+        Detriment = "detriment",
+        Fall = "fall",
+        Peregrine = "peregrine",
+    }
+}
+string_enum! {
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    GetWeeklyHoroscopeResponseFocus {
+        Love = "love",
+        Career = "career",
+        Finance = "finance",
+        Health = "health",
+        Overview = "overview",
+    }
 }
 /// One entry of `events`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -10199,16 +10386,27 @@ pub struct GetWeeklyHoroscopeResponseEventsItem {
     /// Angle formed, on aspect events only: conjunction, sextile, square, trine, opposition, semi-sextile, quincunx, semi-square, or sesquiquadrate.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aspect: Option<String>,
-    /// Exact instant the event perfects, UTC, to the second. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
+    /// Exact instant the event perfects, ISO 8601 to the second, on the clock the reading is read on: UTC with Z by default, the offset of timezone when one is passed on a daily, weekly or monthly reading (2026-11-13T19:27:27-05:00 in New York), the same instant either way; a yearly reading is written in UTC. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
     pub at: String,
     /// Bodies involved, canonical English regardless of the requested language so the value stays safe to switch on. Two entries for an aspect, faster body first. One entry for an ingress, a station, a lunar phase, or an eclipse.
     pub bodies: Vec<String>,
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub direction: Option<GetWeeklyHoroscopeResponseEventsItemDirection>,
     /// Whole-sign house the event falls in, counted from the queried sign, 1 to 12. This is what turns one global sky event into a statement about this reader.
     pub house: i64,
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<GetWeeklyHoroscopeResponseEventsItemKind>,
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<GetWeeklyHoroscopeResponseEventsItemPhase>,
+    /// Each participant at the enclosing event timestamp, in bodies order: two entries for an aspect and one for every other event. Names and signs stay canonical English in every language. Each entry carries its own whole-sign house, including the second body of an aspect. Event placements can differ from positions, which reports noon on the first day of the period.
+    pub placements: Vec<GetWeeklyHoroscopeResponseEventsItemPlacementsItem>,
     /// Sign the event falls in, lowercase, where it has exactly one. Absent for an aspect whose two bodies stand in different signs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sign: Option<String>,
-    /// End of the window this event holds open, UTC, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
+    /// End of the window this event holds open, on the same clock as at, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub through: Option<String>,
     /// Kind of event. aspect is an exact angle between two moving bodies, sign-ingress a body entering a new sign, retrograde-station a body turning retrograde or direct, lunar-phase one of the four quarters, eclipse a solar or lunar eclipse, and solar-season the Sun entering a sign.
@@ -10225,6 +10423,42 @@ string_enum! {
         SolarSeason = "solar-season",
     }
 }
+/// One entry of `placements`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetWeeklyHoroscopeResponseEventsItemPlacementsItem {
+    /// Whole-sign house this body occupies at the event instant, counted from the queried sign, 1 to 12.
+    pub house: i64,
+    /// Body name, canonical English in every language. Matches the entry at the same index in bodies.
+    pub name: String,
+    /// Sign this body occupies at the event timestamp, lowercase and never translated. For a sign change, the sign entered.
+    pub sign: String,
+}
+string_enum! {
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    GetWeeklyHoroscopeResponseEventsItemPhase {
+        NewMoon = "new-moon",
+        FirstQuarter = "first-quarter",
+        FullMoon = "full-moon",
+        LastQuarter = "last-quarter",
+    }
+}
+string_enum! {
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    GetWeeklyHoroscopeResponseEventsItemKind {
+        Penumbral = "penumbral",
+        Partial = "partial",
+        Annular = "annular",
+        Total = "total",
+    }
+}
+string_enum! {
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    GetWeeklyHoroscopeResponseEventsItemDirection {
+        Retrograde = "retrograde",
+        Direct = "direct",
+    }
+}
 /// Path and query parameters of `getWeeklyHoroscope`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -10237,7 +10471,7 @@ pub struct GetWeeklyHoroscopeParams {
     pub lang: Option<GetWeeklyHoroscopeParamsLang>,
     /// Zodiac sign, case-insensitive (e.g., aries, Aries, ARIES all work).
     pub sign: GetWeeklyHoroscopeParamsSign,
-    /// Selects which period counts as current when date is omitted. Defaults to UTC, so the forecast rolls over at 00:00 UTC on each Monday. Pass the timezone of the end user to roll over on their local clock instead. Ignored when date is set. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
+    /// The clock the week is read on: it decides which events fall inside the Monday to Sunday week, the day each is dated by, and which week is current when date is omitted. Defaults to UTC. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
 }
@@ -15378,27 +15612,29 @@ string_enum! {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetMonthlyHoroscopeResponse {
-    /// The single actionable takeaway from the leading event of the period, read into the whole-sign houses of this sign and checkable against the events array. Drawn from the same event as overview, kept to a short, actionable pair of sentences rather than grown to match the other sections. Deterministic: the same sign and period always returns the same text.
+    /// The single actionable takeaway of the period. It opens on the event of the month that most reaches travel, belief, conversation and daily learning, or on a quiet month a standing planet, naming the bodies, the aspect and the life area, then a situation with a way through it, a conditional with a few options, and a close, in the shape of the five fields beside it. Deterministic: the same sign and period always returns the same text.
     pub advice: String,
-    /// Monthly career and professional outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to career, work and reputation, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries career, work and reputation, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 120 to 200 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Monthly career and professional outlook, read into the whole-sign houses of this sign. It opens on the event of the month that most reaches career, work and reputation, dated, or on a quiet month a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries career, work and reputation; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub career: String,
-    /// The full column for this period, ready to run as one piece, with paragraphs separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 400 to 700 words. The six section fields read the same ranked events filtered to their own life area, each composed as a column of its own rather than an excerpt of this one, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
+    /// The full column for this period, ready to run as one piece, its paragraphs, where it has more than one, separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 180 to 250 words. The six section fields each open on an event or standing planet of their own read through their life area, the one named in focus on the lead of this column, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
     pub column: String,
-    /// Most compatible zodiac signs for this sign. Trine partners (same element) followed by a sextile partner (complementary element).
+    /// Three zodiac signs most in tune with this sign this month, best first. Read from the real sky of the period, so the list moves with the transits instead of repeating a fixed table, and every pick can be traced in positions\[\]. On a quiet sky it settles on the classic element partners. For the fixed sign-to-sign pairing, read compatibleSigns from the signs endpoint.
     #[serde(rename = "compatibleSigns")]
     pub compatible_signs: Vec<String>,
     /// The dated astronomical events this reading is built on, earliest first. Every field in every row can be checked against an independent authority, so a column can be fact-checked before it is published. Empty on a period in which nothing exact happens, where the reading falls back to the standing positions instead.
     pub events: Vec<GetMonthlyHoroscopeResponseEventsItem>,
-    /// Monthly financial outlook and guidance, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to finance, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries finance, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 120 to 200 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Monthly financial outlook and guidance, read into the whole-sign houses of this sign. It opens on the event of the month that most reaches finance, dated, or on a quiet month a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries finance; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub finance: String,
-    /// Monthly health and wellness guidance, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to health, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries health, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 120 to 200 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    pub focus: GetMonthlyHoroscopeResponseFocus,
+    /// Monthly health and wellness guidance, read into the whole-sign houses of this sign. It opens on the event of the month that most reaches health, dated, or on a quiet month a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries health; the aggregate event house remains the leading body house. Typically 35 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub health: String,
-    /// The dates to circle this month, earliest first: every lunation and eclipse of the month, plus the headline movements the reading is built on, which are the sign changes of the slower planets and every station with the direction it turns. Each is placed in the whole-sign house it reaches for this sign. Every row is an instant the ephemeris gives, checkable against NASA JPL Horizons or the US Naval Observatory, and every row that is not a lunation or an eclipse is also a row of events\[\], so the list cannot contradict the reading beside it.
+    /// The dates to circle this month, earliest first: every lunation and eclipse of the month, plus the headline movements the reading is built on, which are the sign changes of the slower planets and every station with the direction it turns. Each is placed in the whole-sign house it reaches for this sign. Every row is an instant the ephemeris gives, checkable against NASA JPL Horizons or the US Naval Observatory, and every row is also a row of events\[\], so the list cannot contradict the reading beside it.
     #[serde(rename = "keyDates")]
     pub key_dates: Vec<GetMonthlyHoroscopeResponseKeyDatesItem>,
-    /// Monthly love and relationship forecast, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to romance and partnership, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries romance and partnership, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 120 to 200 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Monthly love and relationship forecast, read into the whole-sign houses of this sign. It is the love monthly, a full piece that reads every transit of the month that reaches romance and partnership through love, in date order, each dated, then a close. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries romance and partnership; the aggregate event house remains the leading body house. Typically 180 to 250 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub love: String,
-    /// Lucky color for the month, drawn from the three colors of the sign element and selected by the planet governing the reading.
+    /// Lucky color for the month, the color traditionally ruled by the planet that governs this sign this month: Sun gold, Moon silver, Mercury light blue, Venus green, Mars red, Jupiter purple, Saturn brown. When Uranus, Neptune or Pluto governs, the next most governing of the seven classical planets gives the color. Translated with the lang parameter.
     #[serde(rename = "luckyColor")]
     pub lucky_color: String,
     /// Four lucky numbers for the month, each 1 to 9 and all distinct, from the traditional planetary number correspondence applied to the four planets that govern this sign this month.
@@ -15406,8 +15642,10 @@ pub struct GetMonthlyHoroscopeResponse {
     pub lucky_numbers: Vec<f64>,
     /// Month of this forecast (YYYY-MM).
     pub month: String,
-    /// The single most relevant event of the period, whichever life area it touches, read into the whole-sign houses of this sign. The same event that leads column, at lede length rather than developed into a full movement, and checkable against the events array. Typically 55 to 100 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
+    /// The event of the month that most reaches home, roots and the self, or on a quiet month a standing planet, written as the five topic fields are and opening on the lead of column whenever focus is overview. Typically 35 to 90 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
     pub overview: String,
+    /// Where each of the ten bodies stands for this reading, one row per body, so every standing claim in the prose (a body in a house, until a date, retrograde until it turns direct, exalted or at home) can be checked against the response itself. It carries state only: every aspect, lunation, eclipse, ingress or station of the period is a row of events\[\]. Against events\[\], it adds the bodies that do nothing exact in the period (events\[\] names only what happens), the entry and exit of the sign each stands in (events\[\].through carries an exit only for an ingress inside the period), the instant a retrograde body turns direct, and dignity. Against activeTransits, which the daily prints as translated strings for the seven visible bodies, it adds Uranus, Neptune and Pluto, the lowercase sign and numeric house as values, the retrograde flag as a boolean, and the three instants. Where an instant appears in both keys it is the same string. Never translated.
+    pub positions: Vec<GetMonthlyHoroscopeResponsePositionsItem>,
     /// Zodiac sign for this horoscope.
     pub sign: String,
     /// The month read one calendar week at a time, off the same ranked events as column and events\[\]: the life area each week turns on, and the one thing that area asks for. Two weeks may land in the same area, because two events of a month often do; the sentence beside it is always different. Use it for the week strip of a monthly page.
@@ -15418,21 +15656,66 @@ pub struct GetMonthlyHoroscopeResponse {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetMonthlyHoroscopeResponseWeekByWeekItem {
-    /// What that house asks for, as one sentence in the requested language. No two weeks of one month repeat a sentence.
+    /// One practical sentence for that life area, in the requested language. No two weeks of one month repeat a sentence.
     pub advice: String,
     /// The life area the week turns on, in the requested language: the theme of the whole-sign house holding the strongest event the reading names inside that week, or of the strongest standing placement where the week holds no dated event. Same values as the life areas of the yearly key periods.
     pub focus: String,
     /// Position of the week inside the month, 1 first. The rows are calendar weeks, Monday to Sunday, clipped to the month at each end, so a month carries four, five or six of them. Row N is therefore the same week the weekly forecast covers, which is what lets a monthly page link straight into it.
     pub week: f64,
 }
+/// One entry of `positions`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetMonthlyHoroscopeResponsePositionsItem {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    pub dignity: GetMonthlyHoroscopeResponsePositionsItemDignity,
+    /// Instant the body entered this sign, to the second, on the same clock as events\[\].at. Where the entry is also a row of events\[\] in this response it is that row at, byte for byte. Absent only where the entry lies too far back to date.
+    #[serde(rename = "enteredAt", skip_serializing_if = "Option::is_none")]
+    pub entered_at: Option<String>,
+    /// Whole-sign house that sign is for the queried sign, 1 to 12, counted as events\[\].house is.
+    pub house: i64,
+    /// Whether the body moves retrograde at that noon. Same key as planets\[\].isRetrograde on the natal chart; the daily activeTransits prints the same flag as a translated string.
+    #[serde(rename = "isRetrograde")]
+    pub is_retrograde: bool,
+    /// Instant the body next leaves this sign, to the second, on the same clock as events\[\].at: the date a column prints in until April 15. Where it is also in events\[\] (the ingress that ends the stay, or the through of the ingress that began it) it is that string, byte for byte. Absent only where the exit lies too far ahead to date.
+    #[serde(rename = "leavesAt", skip_serializing_if = "Option::is_none")]
+    pub leaves_at: Option<String>,
+    /// Body, canonical English regardless of the requested language: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune or Pluto, in that order, one row each. Same key and values as planets\[\].name on the natal chart.
+    pub name: String,
+    /// Sign the body stands in at noon on the first day of the period on the reader clock, lowercase like events\[\].sign, never translated.
+    pub sign: String,
+    /// Instant the body next turns direct, to the second, on the same clock as events\[\].at, present only while isRetrograde is true: the date a retrograde is dated by in the prose. Where the station is also in events\[\] it is that row at or through, byte for byte. Absent only where the turn lies too far ahead to date.
+    #[serde(rename = "turnsDirectAt", skip_serializing_if = "Option::is_none")]
+    pub turns_direct_at: Option<String>,
+}
+string_enum! {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    GetMonthlyHoroscopeResponsePositionsItemDignity {
+        Domicile = "domicile",
+        Exaltation = "exaltation",
+        Detriment = "detriment",
+        Fall = "fall",
+        Peregrine = "peregrine",
+    }
+}
 /// One entry of `keyDates`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetMonthlyHoroscopeResponseKeyDatesItem {
-    /// UTC date of the event (YYYY-MM-DD). The exact instant, to the second, is on the matching row of events\[\].
+    /// Date of the event (YYYY-MM-DD) on the clock the month is read on, the day the column names it: a station at 00:27 UTC is the previous day in New York. The exact instant, to the second, is on the matching row of events\[\].
     pub date: String,
-    /// The event as one sentence in the requested language, placed in the whole-sign house it reaches for this sign.
+    /// The event in the requested language, with the sign it falls in and the life area of the whole-sign house that sign is for this zodiac sign, as a dated calendar list prints it.
     pub event: String,
+}
+string_enum! {
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    GetMonthlyHoroscopeResponseFocus {
+        Love = "love",
+        Career = "career",
+        Finance = "finance",
+        Health = "health",
+        Overview = "overview",
+    }
 }
 /// One entry of `events`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -15441,16 +15724,27 @@ pub struct GetMonthlyHoroscopeResponseEventsItem {
     /// Angle formed, on aspect events only: conjunction, sextile, square, trine, opposition, semi-sextile, quincunx, semi-square, or sesquiquadrate.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aspect: Option<String>,
-    /// Exact instant the event perfects, UTC, to the second. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
+    /// Exact instant the event perfects, ISO 8601 to the second, on the clock the reading is read on: UTC with Z by default, the offset of timezone when one is passed on a daily, weekly or monthly reading (2026-11-13T19:27:27-05:00 in New York), the same instant either way; a yearly reading is written in UTC. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
     pub at: String,
     /// Bodies involved, canonical English regardless of the requested language so the value stays safe to switch on. Two entries for an aspect, faster body first. One entry for an ingress, a station, a lunar phase, or an eclipse.
     pub bodies: Vec<String>,
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub direction: Option<GetMonthlyHoroscopeResponseEventsItemDirection>,
     /// Whole-sign house the event falls in, counted from the queried sign, 1 to 12. This is what turns one global sky event into a statement about this reader.
     pub house: i64,
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<GetMonthlyHoroscopeResponseEventsItemKind>,
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<GetMonthlyHoroscopeResponseEventsItemPhase>,
+    /// Each participant at the enclosing event timestamp, in bodies order: two entries for an aspect and one for every other event. Names and signs stay canonical English in every language. Each entry carries its own whole-sign house, including the second body of an aspect. Event placements can differ from positions, which reports noon on the first day of the period.
+    pub placements: Vec<GetMonthlyHoroscopeResponseEventsItemPlacementsItem>,
     /// Sign the event falls in, lowercase, where it has exactly one. Absent for an aspect whose two bodies stand in different signs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sign: Option<String>,
-    /// End of the window this event holds open, UTC, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
+    /// End of the window this event holds open, on the same clock as at, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub through: Option<String>,
     /// Kind of event. aspect is an exact angle between two moving bodies, sign-ingress a body entering a new sign, retrograde-station a body turning retrograde or direct, lunar-phase one of the four quarters, eclipse a solar or lunar eclipse, and solar-season the Sun entering a sign.
@@ -15467,6 +15761,42 @@ string_enum! {
         SolarSeason = "solar-season",
     }
 }
+/// One entry of `placements`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetMonthlyHoroscopeResponseEventsItemPlacementsItem {
+    /// Whole-sign house this body occupies at the event instant, counted from the queried sign, 1 to 12.
+    pub house: i64,
+    /// Body name, canonical English in every language. Matches the entry at the same index in bodies.
+    pub name: String,
+    /// Sign this body occupies at the event timestamp, lowercase and never translated. For a sign change, the sign entered.
+    pub sign: String,
+}
+string_enum! {
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    GetMonthlyHoroscopeResponseEventsItemPhase {
+        NewMoon = "new-moon",
+        FirstQuarter = "first-quarter",
+        FullMoon = "full-moon",
+        LastQuarter = "last-quarter",
+    }
+}
+string_enum! {
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    GetMonthlyHoroscopeResponseEventsItemKind {
+        Penumbral = "penumbral",
+        Partial = "partial",
+        Annular = "annular",
+        Total = "total",
+    }
+}
+string_enum! {
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    GetMonthlyHoroscopeResponseEventsItemDirection {
+        Retrograde = "retrograde",
+        Direct = "direct",
+    }
+}
 /// Path and query parameters of `getMonthlyHoroscope`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -15479,7 +15809,7 @@ pub struct GetMonthlyHoroscopeParams {
     pub lang: Option<GetMonthlyHoroscopeParamsLang>,
     /// Zodiac sign, case-insensitive (e.g., aries, Aries, ARIES all work).
     pub sign: GetMonthlyHoroscopeParamsSign,
-    /// Selects which period counts as current when date is omitted. Defaults to UTC, so the forecast rolls over at 00:00 UTC on the 1st. Pass the timezone of the end user to roll over on their local clock instead. Ignored when date is set. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
+    /// The clock the month is read on: it decides which events fall inside the calendar month, the date each is dated by, and which month is current when date is omitted. Defaults to UTC. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
 }
@@ -19087,18 +19417,20 @@ string_enum! {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GetDailyHoroscopeResponse {
-    /// Active planetary transits affecting this sign today, with house activations. Each transit shows the planet, its current sign, and which house it activates for the queried sign. The sign and the house phrase translate with the lang parameter; the planet name stays canonical English so a caller can match on it whatever the language.
+    /// Active planetary transits affecting this sign today, with house activations. Each transit shows the planet, its current sign, and the house it activates for the queried sign, named by its life area as the prose names it (your house of partnership). The sign and the house phrase translate with the lang parameter; the planet name stays canonical English so a caller can match on it whatever the language.
     #[serde(rename = "activeTransits")]
     pub active_transits: Vec<String>,
-    /// The single actionable takeaway from the leading event of the period, read into the whole-sign houses of this sign and checkable against the events array. Drawn from the same event as overview, kept to a short, actionable pair of sentences rather than grown to match the other sections. Deterministic: the same sign and period always returns the same text.
+    /// The single actionable takeaway of the period. It opens on the event of the day that most reaches travel, belief, conversation and daily learning, or on a quiet day a standing planet, naming the bodies, the aspect and the life area, then a situation with a way through it, a conditional with a few options, and a close, in the shape of the five fields beside it. Deterministic: the same sign and period always returns the same text.
     pub advice: String,
-    /// Career and professional outlook, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to career, work and reputation, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries career, work and reputation, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 50 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Career and professional outlook, read into the whole-sign houses of this sign. It opens on the event of the day that most reaches career, work and reputation, or on a quiet day a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries career, work and reputation; the aggregate event house remains the leading body house. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub career: String,
-    /// The full column for this period, ready to run as one piece, with paragraphs separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 120 to 180 words. The six section fields read the same ranked events filtered to their own life area, each composed as a column of its own rather than an excerpt of this one, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
+    /// The full column for this period, ready to run as one piece, its paragraphs, where it has more than one, separated by a blank line. Names the events driving it and the dates they fall on, read into the whole-sign houses of this sign. Typically 80 to 120 words. The six section fields each open on an event or standing planet of their own read through their life area, the one named in focus on the lead of this column, so render either shape and never both. Deterministic: the same sign and period always returns the same column.
     pub column: String,
-    /// Most compatible zodiac signs for this sign. Trine partners (same element) followed by a sextile partner (complementary element). Use for compatibility widgets, dating app onboarding, and horoscope cards.
+    /// Three zodiac signs most in tune with this sign today, best first. Read from the real sky of the period, so the list moves with the transits instead of repeating a fixed table, and every pick can be traced in positions\[\]. On a quiet sky it settles on the classic element partners. For the fixed sign-to-sign pairing, read compatibleSigns from the signs endpoint.
     #[serde(rename = "compatibleSigns")]
     pub compatible_signs: Vec<String>,
+    /// Crystal of the day for this sign: a stone traditionally linked to this sign and to the planet that governs it today, stepping down to the next governing planet when none is, and to any stone of the sign after that. Rotates by date among equally fitting stones, so the same sign meets a new stone on consecutive days. Use for daily crystal cards beside the horoscope.
+    pub crystal: GetDailyHoroscopeResponseCrystal,
     /// Date of this daily horoscope (YYYY-MM-DD).
     pub date: String,
     /// Overall energy for this sign today (1-10). Derived from how many aspects are in force between the planets, how tight they are, whether they are harmonious or challenging, and which houses they fall in for this sign, so a busy day rates higher than a quiet one and a harmonious day higher than a hostile one of the same weight. Useful for content widgets and visual indicators.
@@ -19106,13 +19438,15 @@ pub struct GetDailyHoroscopeResponse {
     pub energy_rating: f64,
     /// The dated astronomical events this reading is built on, earliest first. Every field in every row can be checked against an independent authority, so a column can be fact-checked before it is published. Empty on a period in which nothing exact happens, where the reading falls back to the standing positions instead.
     pub events: Vec<GetDailyHoroscopeResponseEventsItem>,
-    /// Financial outlook and money-related guidance, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to finance, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries finance, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 50 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Financial outlook and money-related guidance, read into the whole-sign houses of this sign. It opens on the event of the day that most reaches finance, or on a quiet day a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries finance; the aggregate event house remains the leading body house. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub finance: String,
-    /// Health, energy, and wellness guidance, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to health, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries health, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 50 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    pub focus: GetDailyHoroscopeResponseFocus,
+    /// Health, energy, and wellness guidance, read into the whole-sign houses of this sign. It opens on the event of the day that most reaches health, or on a quiet day a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries health; the aggregate event house remains the leading body house. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub health: String,
-    /// Love and relationship forecast, read into the whole-sign houses of this sign. The same ranked events that drive column, filtered to romance and partnership, plus the standing placements that reach it. Every event named here is in the events array, so a piece can be fact-checked before it runs; this section reads an event through whichever of its houses carries romance and partnership, which for an aspect between two houses can be the other one from the house the events array leads with, and both are whole-sign houses of the bodies involved counted from this sign. Typically 50 to 90 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is the same material woven into one piece instead of split by topic. Deterministic: the same sign and period always returns the same text.
+    /// Love and relationship forecast, read into the whole-sign houses of this sign. It opens on the event of the day that most reaches romance and partnership, or on a quiet day a standing planet, naming the bodies, the aspect and the life area and what it stirs, then a human situation of this topic with a way through it, a conditional with a few options, and a close; the topic named in focus opens on the same event as column. Every named event is in events, with each participant sign and whole-sign house in placements at the event time. This section reads whichever participant house carries romance and partnership; the aggregate event house remains the leading body house. Typically 80 to 120 words. Render it alone for a single-topic page, or alongside the other five sections for a general reading; column is a separate piece of its own. Deterministic: the same sign and period always returns the same text.
     pub love: String,
-    /// Lucky color for the day, drawn from the three colors of the sign element and selected by the planet governing the reading.
+    /// Lucky color for the day, the color traditionally ruled by the planet that governs this sign today: Sun gold, Moon silver, Mercury light blue, Venus green, Mars red, Jupiter purple, Saturn brown. When Uranus, Neptune or Pluto governs, the next most governing of the seven classical planets gives the color. Translated with the lang parameter.
     #[serde(rename = "luckyColor")]
     pub lucky_color: String,
     /// Lucky number for the day, 1 to 9, from the traditional planetary number correspondence applied to the planet that governs this sign today. Not a random draw and not a function of the date.
@@ -19124,10 +19458,57 @@ pub struct GetDailyHoroscopeResponse {
     /// Current Moon sign. Changes every 2-3 days, sets the emotional tone for all signs.
     #[serde(rename = "moonSign")]
     pub moon_sign: String,
-    /// The single most relevant event of the period, whichever life area it touches, read into the whole-sign houses of this sign. The same event that leads column, at lede length rather than developed into a full movement, and checkable against the events array. Typically 30 to 60 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
+    /// The event of the day that most reaches home, roots and the self, or on a quiet day a standing planet, written as the five topic fields are and opening on the lead of column whenever focus is overview. Typically 80 to 120 words. Join it with love, career, health and finance for a general reading built from the six sections. Deterministic: the same sign and period always returns the same text.
     pub overview: String,
+    /// Where each of the ten bodies stands for this reading, one row per body, so every standing claim in the prose (a body in a house, until a date, retrograde until it turns direct, exalted or at home) can be checked against the response itself. It carries state only: every aspect, lunation, eclipse, ingress or station of the period is a row of events\[\]. Against events\[\], it adds the bodies that do nothing exact in the period (events\[\] names only what happens), the entry and exit of the sign each stands in (events\[\].through carries an exit only for an ingress inside the period), the instant a retrograde body turns direct, and dignity. Against activeTransits, which the daily prints as translated strings for the seven visible bodies, it adds Uranus, Neptune and Pluto, the lowercase sign and numeric house as values, the retrograde flag as a boolean, and the three instants. Where an instant appears in both keys it is the same string. Never translated.
+    pub positions: Vec<GetDailyHoroscopeResponsePositionsItem>,
     /// Zodiac sign for this horoscope.
     pub sign: String,
+}
+/// One entry of `positions`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetDailyHoroscopeResponsePositionsItem {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    pub dignity: GetDailyHoroscopeResponsePositionsItemDignity,
+    /// Instant the body entered this sign, to the second, on the same clock as events\[\].at. Where the entry is also a row of events\[\] in this response it is that row at, byte for byte. Absent only where the entry lies too far back to date.
+    #[serde(rename = "enteredAt", skip_serializing_if = "Option::is_none")]
+    pub entered_at: Option<String>,
+    /// Whole-sign house that sign is for the queried sign, 1 to 12, counted as events\[\].house is.
+    pub house: i64,
+    /// Whether the body moves retrograde at that noon. Same key as planets\[\].isRetrograde on the natal chart; the daily activeTransits prints the same flag as a translated string.
+    #[serde(rename = "isRetrograde")]
+    pub is_retrograde: bool,
+    /// Instant the body next leaves this sign, to the second, on the same clock as events\[\].at: the date a column prints in until April 15. Where it is also in events\[\] (the ingress that ends the stay, or the through of the ingress that began it) it is that string, byte for byte. Absent only where the exit lies too far ahead to date.
+    #[serde(rename = "leavesAt", skip_serializing_if = "Option::is_none")]
+    pub leaves_at: Option<String>,
+    /// Body, canonical English regardless of the requested language: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune or Pluto, in that order, one row each. Same key and values as planets\[\].name on the natal chart.
+    pub name: String,
+    /// Sign the body stands in at noon on the first day of the period on the reader clock, lowercase like events\[\].sign, never translated.
+    pub sign: String,
+    /// Instant the body next turns direct, to the second, on the same clock as events\[\].at, present only while isRetrograde is true: the date a retrograde is dated by in the prose. Where the station is also in events\[\] it is that row at or through, byte for byte. Absent only where the turn lies too far ahead to date.
+    #[serde(rename = "turnsDirectAt", skip_serializing_if = "Option::is_none")]
+    pub turns_direct_at: Option<String>,
+}
+string_enum! {
+    /// Essential dignity of the body in that sign, the same value planets\[\].dignity reports on the natal chart: domicile, exaltation, detriment, fall, or peregrine. Always English. A column or card that calls a body at home or exalted is backed by this value.
+    GetDailyHoroscopeResponsePositionsItemDignity {
+        Domicile = "domicile",
+        Exaltation = "exaltation",
+        Detriment = "detriment",
+        Fall = "fall",
+        Peregrine = "peregrine",
+    }
+}
+string_enum! {
+    /// The topic this reading is mainly about: love, career, finance or health when the lead event falls in that life area, overview for a bigger-picture period. A machine value, canonical English in every language, so a client can route its own content on it (a related article, a product, a call to action) without parsing the prose; the topic field it names reads the same lead the column opens on.
+    GetDailyHoroscopeResponseFocus {
+        Love = "love",
+        Career = "career",
+        Finance = "finance",
+        Health = "health",
+        Overview = "overview",
+    }
 }
 /// One entry of `events`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -19136,16 +19517,27 @@ pub struct GetDailyHoroscopeResponseEventsItem {
     /// Angle formed, on aspect events only: conjunction, sextile, square, trine, opposition, semi-sextile, quincunx, semi-square, or sesquiquadrate.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aspect: Option<String>,
-    /// Exact instant the event perfects, UTC, to the second. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
+    /// Exact instant the event perfects, ISO 8601 to the second, on the clock the reading is read on: UTC with Z by default, the offset of timezone when one is passed on a daily, weekly or monthly reading (2026-11-13T19:27:27-05:00 in New York), the same instant either way; a yearly reading is written in UTC. Verifiable against NASA JPL Horizons for a position event and against the US Naval Observatory for a lunar phase or eclipse.
     pub at: String,
     /// Bodies involved, canonical English regardless of the requested language so the value stays safe to switch on. Two entries for an aspect, faster body first. One entry for an ingress, a station, a lunar phase, or an eclipse.
     pub bodies: Vec<String>,
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub direction: Option<GetDailyHoroscopeResponseEventsItemDirection>,
     /// Whole-sign house the event falls in, counted from the queried sign, 1 to 12. This is what turns one global sky event into a statement about this reader.
     pub house: i64,
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<GetDailyHoroscopeResponseEventsItemKind>,
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<GetDailyHoroscopeResponseEventsItemPhase>,
+    /// Each participant at the enclosing event timestamp, in bodies order: two entries for an aspect and one for every other event. Names and signs stay canonical English in every language. Each entry carries its own whole-sign house, including the second body of an aspect. Event placements can differ from positions, which reports noon on the first day of the period.
+    pub placements: Vec<GetDailyHoroscopeResponseEventsItemPlacementsItem>,
     /// Sign the event falls in, lowercase, where it has exactly one. Absent for an aspect whose two bodies stand in different signs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sign: Option<String>,
-    /// End of the window this event holds open, UTC, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
+    /// End of the window this event holds open, on the same clock as at, given only where a bounded window is a real fact about it: the orb span of an aspect, the sign span of an ingress or a season, the retrograde span of a station. Absent for a lunar phase or an eclipse, which are instants and not spans.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub through: Option<String>,
     /// Kind of event. aspect is an exact angle between two moving bodies, sign-ingress a body entering a new sign, retrograde-station a body turning retrograde or direct, lunar-phase one of the four quarters, eclipse a solar or lunar eclipse, and solar-season the Sun entering a sign.
@@ -19162,6 +19554,51 @@ string_enum! {
         SolarSeason = "solar-season",
     }
 }
+/// One entry of `placements`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetDailyHoroscopeResponseEventsItemPlacementsItem {
+    /// Whole-sign house this body occupies at the event instant, counted from the queried sign, 1 to 12.
+    pub house: i64,
+    /// Body name, canonical English in every language. Matches the entry at the same index in bodies.
+    pub name: String,
+    /// Sign this body occupies at the event timestamp, lowercase and never translated. For a sign change, the sign entered.
+    pub sign: String,
+}
+string_enum! {
+    /// Exact quarter phase, on lunar-phase events only: new-moon, first-quarter, full-moon, or last-quarter. Canonical English in every language. Use to identify the phase at the event instant.
+    GetDailyHoroscopeResponseEventsItemPhase {
+        NewMoon = "new-moon",
+        FirstQuarter = "first-quarter",
+        FullMoon = "full-moon",
+        LastQuarter = "last-quarter",
+    }
+}
+string_enum! {
+    /// Eclipse classification at peak, on eclipse events only: penumbral, partial, annular, or total. Canonical English in every language. Sun in bodies identifies a solar eclipse and Moon a lunar eclipse.
+    GetDailyHoroscopeResponseEventsItemKind {
+        Penumbral = "penumbral",
+        Partial = "partial",
+        Annular = "annular",
+        Total = "total",
+    }
+}
+string_enum! {
+    /// Direction the body turns at the event instant, on retrograde-station events only: retrograde starts backward motion and direct ends it. Canonical English in every language. Present even when the other end of the retrograde span cannot be dated.
+    GetDailyHoroscopeResponseEventsItemDirection {
+        Retrograde = "retrograde",
+        Direct = "direct",
+    }
+}
+/// Crystal of the day for this sign: a stone traditionally linked to this sign and to the planet that governs it today, stepping down to the next governing planet when none is, and to any stone of the sign after that. Rotates by date among equally fitting stones, so the same sign meets a new stone on consecutive days. Use for daily crystal cards beside the horoscope.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GetDailyHoroscopeResponseCrystal {
+    /// Crystal identifier, stable in every language. Pass it to the crystal lookup endpoint, GET /crystals/{id}, for the full healing properties, chakras and affirmation.
+    pub id: String,
+    /// Display name of the crystal, translated with the lang parameter.
+    pub name: String,
+}
 /// Path and query parameters of `getDailyHoroscope`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -19174,7 +19611,7 @@ pub struct GetDailyHoroscopeParams {
     pub lang: Option<GetDailyHoroscopeParamsLang>,
     /// Zodiac sign, case-insensitive (e.g., aries, Aries, ARIES all work).
     pub sign: GetDailyHoroscopeParamsSign,
-    /// Selects which period counts as current when date is omitted. Defaults to UTC, so the forecast rolls over at 00:00 UTC on each day. Pass the timezone of the end user to roll over on their local clock instead. Ignored when date is set. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
+    /// The clock the day is read on: it decides which events fall on the date, so a transit the evening before in the timezone of the end user is never called today, and which date is current when date is omitted. Defaults to UTC. Accepts an IANA name (e.g. "America/New_York"), decimal hours (e.g. 5.5 for IST), or a fixed UTC offset (e.g. "-05:00").
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
 }
@@ -29597,7 +30034,7 @@ pub struct DetectAspectPatternsParams {
     /// Response language (BCP 47). Supported: en, tr, de, es, hi, pt, fr, ru, zh-Hans, zh-Hant. Defaults to en. Coverage varies by domain, and a field with no translation in the requested language returns English.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lang: Option<DetectAspectPatternsParamsLang>,
-    /// Use tighter orbs, so only closely formed patterns are reported. Truthy values (true, 1, yes, on; case-insensitive) narrow trine to 5 degrees, square to 5, sextile to 4, quincunx to 2. Defaults to false, the standard pattern-detection orbs.
+    /// Use tighter orbs, so only closely formed patterns are reported. Truthy values (true, 1, yes, on; case-insensitive) narrow trine to 5 degrees, square to 5, sextile to 4, quincunx to 2. Every leg must occur in the chart aspect table. Defaults to false.
     #[serde(rename = "strictOrbs", skip_serializing_if = "Option::is_none")]
     pub strict_orbs: Option<String>,
 }
@@ -39539,7 +39976,9 @@ pub struct BirthChartResponse {
     pub gemini: BirthChartResponseGemini,
     /// The twelve bhavas (houses) in order, each with its classical name and significations. Houses are counted whole-sign from the Lagna.
     pub houses: Vec<BirthChartResponseHousesItem>,
-    /// Planet-in-rashi and planet-in-nakshatra interpretation summaries, keyed by planet name. Translated when a supported lang is requested.
+    /// Whole-chart Vedic birth chart reading written for this birth in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish, the kundli at a glance.
+    pub interpretation: BirthChartResponseInterpretation,
+    /// Rashi and nakshatra readings for every graha and the Lagna, keyed by planet name, written for this chart in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish.
     pub interpretations: BirthChartResponseInterpretations,
     /// The `leo` field.
     pub leo: BirthChartResponseLeo,
@@ -40498,7 +40937,7 @@ string_enum! {
         Mrita = "Mrita",
     }
 }
-/// Planet-in-rashi and planet-in-nakshatra interpretation summaries, keyed by planet name. Translated when a supported lang is requested.
+/// Rashi and nakshatra readings for every graha and the Lagna, keyed by planet name, written for this chart in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct BirthChartResponseInterpretations {
@@ -40513,26 +40952,32 @@ pub struct BirthChartResponseInterpretations {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct BirthChartResponseInterpretationsAdditionalProperty {
-    /// Interpretation of the planet placement in its nakshatra.
+    /// Reading of the graha in its nakshatra and the star lord it serves; for the Moon, the janma nakshatra.
     pub nakshatra: String,
-    /// Interpretation of the planet placement in its rashi (sign).
+    /// Reading of the graha in its rashi (sign), with its dignity, combustion, retrograde motion and planetary war where the chart holds them.
     pub rashi: String,
+}
+/// Whole-chart Vedic birth chart reading written for this birth in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish, the kundli at a glance.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct BirthChartResponseInterpretation {
+    /// The whole-chart reading in three paragraphs separated by a blank line: how the Lagna (ascendant) rashi and the Moon rashi relate, counted from each other, with the paksha (lunar fortnight) of birth, or the dark Moon when the Moon is combust; where the Lagna lord sits, its strength and its distance from the Moon; then the chart signature, such as a Pancha Mahapurusha or Gajakesari yoga, a cluster of grahas in one bhava, or an exalted graha.
+    pub detailed: String,
+    /// The chart thesis in two sentences: how the Lagna (ascendant) rashi and the Moon rashi relate, the two placements a Vedic reading opens on, then where the Lagna lord sits.
+    pub summary: String,
 }
 /// One entry of `houses`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct BirthChartResponseHousesItem {
-    /// Significations of the bhava (house). Present when an interpretation entry exists for this house.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    /// Classical name of the bhava (house). Present when an interpretation entry exists for this house.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    /// Reading of the bhava (house), written for this chart in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish: where its lord sits, each graha it holds, and, for a bhava no graha occupies, the drishti Jupiter or Saturn casts on it.
+    pub description: String,
+    /// Classical name of the bhava (house).
+    pub name: String,
     /// Bhava (house) number 1-12. House 1 is the Lagna (Ascendant), house 7 the partnership axis, house 10 the career axis.
     pub number: i64,
-    /// Significations of the bhava as short keywords, the compact form of description. Bhava 1 covers self, body and vitality; 2 wealth and speech; 7 marriage and partnership; 10 career and status. Suited to chart labels, table cells and legends where the full classical description is too long, and identical to the houseThemes map returned by the Vimshottari dasha and KP chart routes. Localized by the lang query parameter.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub themes: Option<Vec<String>>,
+    /// Significations of the bhava as short keywords. Bhava 1 covers self, body and vitality; 2 wealth and speech; 7 marriage and partnership; 10 career and status. Suited to chart labels, table cells and legends, and identical to the houseThemes map returned by the Vimshottari dasha and KP chart routes. Localized by the lang query parameter.
+    pub themes: Vec<String>,
 }
 /// The `gemini` value.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -41933,7 +42378,7 @@ pub struct AspectsResponsePatternsItem {
     /// Variables that were interpolated into the interpretation template. Names already resolved to the requested language where appropriate.
     #[serde(rename = "interpretationVars")]
     pub interpretation_vars: AspectsResponsePatternsItemInterpretationVars,
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     pub kind: AspectsResponsePatternsItemKind,
     /// Dominant modality for tension-based patterns (T-Square, Grand Cross). Cardinal initiates, Fixed sustains, Mutable adapts.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -41954,7 +42399,7 @@ string_enum! {
     }
 }
 string_enum! {
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     AspectsResponsePatternsItemKind {
         GrandTrine = "GRAND_TRINE",
         Kite = "KITE",
@@ -42097,7 +42542,7 @@ pub struct AspectPatternsResponsePatternsItem {
     /// Variables that were interpolated into the interpretation template. Names already resolved to the requested language where appropriate.
     #[serde(rename = "interpretationVars")]
     pub interpretation_vars: AspectPatternsResponsePatternsItemInterpretationVars,
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     pub kind: AspectPatternsResponsePatternsItemKind,
     /// Dominant modality for tension-based patterns (T-Square, Grand Cross). Cardinal initiates, Fixed sustains, Mutable adapts.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42118,7 +42563,7 @@ string_enum! {
     }
 }
 string_enum! {
-    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (Finger of Fate, fated adjustment), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
+    /// Pattern kind identifier. GRAND_TRINE (3 trines, harmonious flow), KITE (Grand Trine with a focal outlet planet), T_SQUARE (opposition with squared apex, growth engine), GRAND_CROSS (4 planets in 2 oppositions and 4 squares, peak tension), YOD (a planet at the apex of two quincunxes, a call to adjust), MYSTIC_RECTANGLE (oppositions softened by trines and sextiles), STELLIUM (3+ planets clustered in a sign or 10-degree arc).
     AspectPatternsResponsePatternsItemKind {
         GrandTrine = "GRAND_TRINE",
         Kite = "KITE",
@@ -42152,7 +42597,7 @@ string_enum! {
 pub struct AspectPatternsResponseOptions {
     /// Optional bodies included beyond the default Sun-Pluto set. Empty means classical 10-planet detection only.
     pub include: Vec<AspectPatternsResponseOptionsIncludeItem>,
-    /// Whether the tight orb budget was used. False uses the standard pattern-detection orbs (8 degrees for major aspects, 9 for square, 6 for sextile, 3 for quincunx).
+    /// Whether the tight orb budget was used. False uses the chart aspect table orbs; true narrows them further.
     #[serde(rename = "strictOrbs")]
     pub strict_orbs: bool,
 }
