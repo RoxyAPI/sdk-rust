@@ -23183,8 +23183,11 @@ pub struct GenerateTransitResponseActivationsItem {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GenerateTransitResponseActivationsItemIchingHexagram {
-    /// English name of the corresponding I-Ching hexagram.
+    /// English name of the corresponding I-Ching hexagram. Always English, whatever the lang parameter says. Use nameLocalized for anything a reader sees.
     pub english: String,
+    /// Hexagram name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
     /// I-Ching hexagram number, identical to the gate number it corresponds to.
     pub number: f64,
 }
@@ -27430,8 +27433,14 @@ pub struct GenerateCompositeChartResponseCompositePlanetsItem {
     pub longitude: f64,
     /// Body name. One of the 10 classical planets (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto), the lunar nodes (North Node, South Node), Chiron, or Black Moon Lilith (the mean lunar apogee). The lunar nodes follow the request nodeType, which defaults to the true (osculating) node; pass "mean" for the smoothed node. The two differ by up to about 1.8 degrees and no other body is affected.
     pub name: GenerateCompositeChartResponseCompositePlanetsItemName,
+    /// Body name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
     /// Tropical zodiac sign this planet occupies. Determined by 30-degree divisions of ecliptic longitude.
     pub sign: String,
+    /// Zodiac sign name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
+    pub sign_localized: Option<String>,
     /// Daily motion in degrees per day. Negative values indicate retrograde motion.
     pub speed: f64,
 }
@@ -27476,6 +27485,9 @@ pub struct GenerateCompositeChartResponseCompositeMidheaven {
     pub longitude: f64,
     /// Zodiac sign on the composite Midheaven.
     pub sign: String,
+    /// Midheaven sign name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
+    pub sign_localized: Option<String>,
 }
 /// One entry of `compositeHouses`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27489,6 +27501,9 @@ pub struct GenerateCompositeChartResponseCompositeHousesItem {
     pub number: f64,
     /// Zodiac sign on the composite house cusp.
     pub sign: String,
+    /// Zodiac sign name on this cusp in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
+    pub sign_localized: Option<String>,
 }
 /// Composite Ascendant. Represents how the relationship presents itself to the outside world.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27500,6 +27515,9 @@ pub struct GenerateCompositeChartResponseCompositeAscendant {
     pub longitude: f64,
     /// Zodiac sign on the composite Ascendant.
     pub sign: String,
+    /// Ascendant sign name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "signLocalized", skip_serializing_if = "Option::is_none")]
+    pub sign_localized: Option<String>,
 }
 /// One entry of `aspects`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27516,12 +27534,21 @@ pub struct GenerateCompositeChartResponseAspectsItem {
     pub orb: f64,
     /// First planet in the aspect pair.
     pub planet1: GenerateCompositeChartResponseAspectsItemPlanet1,
+    /// First planet name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "planet1Localized", skip_serializing_if = "Option::is_none")]
+    pub planet1_localized: Option<String>,
     /// Second planet in the aspect pair.
     pub planet2: GenerateCompositeChartResponseAspectsItemPlanet2,
+    /// Second planet name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "planet2Localized", skip_serializing_if = "Option::is_none")]
+    pub planet2_localized: Option<String>,
     /// Aspect strength percentage (0-100). Based on orb tightness relative to the allowed maximum.
     pub strength: f64,
     /// Aspect type. Major: conjunction (0), opposition (180), trine (120), square (90), sextile (60). Minor: semi-sextile, quincunx, semi-square, sesquiquadrate.
     pub r#type: GenerateCompositeChartResponseAspectsItemType,
+    /// Aspect type name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "typeLocalized", skip_serializing_if = "Option::is_none")]
+    pub type_localized: Option<String>,
 }
 string_enum! {
     /// Aspect type. Major: conjunction (0), opposition (180), trine (120), square (90), sextile (60). Minor: semi-sextile, quincunx, semi-square, sesquiquadrate.
@@ -27717,7 +27744,7 @@ pub struct GenerateBodygraphResponse {
     pub channels: Vec<GenerateBodygraphResponseChannelsItem>,
     /// Definition type from the number of connected components among defined centers. One of None, Single, Split, Triple Split, Quadruple Split. Always English, whatever the lang parameter says, so it stays safe to compare against in code. Use definitionLocalized for anything a reader sees.
     pub definition: String,
-    /// How energy flows through the defined centers in this configuration, and what the configuration needs. For a split, this is where the bridging gates of other people matter.
+    /// How energy flows through your defined centers: which centers form each connected group and, where the definition is split, the gates in another person that would bridge the groups.
     #[serde(rename = "definitionDescription")]
     pub definition_description: String,
     /// Definition type name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
@@ -27731,6 +27758,8 @@ pub struct GenerateBodygraphResponse {
     /// The incarnation cross built from the four cardinal gates and the profile angle.
     #[serde(rename = "incarnationCross")]
     pub incarnation_cross: GenerateBodygraphResponseIncarnationCross,
+    /// A reading of the whole bodygraph that connects type, authority, profile, definition and incarnation cross, written for this chart in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish.
+    pub interpretation: GenerateBodygraphResponseInterpretation,
     /// The not-self theme, the recurring feeling that signals being out of alignment. Always English, whatever the lang parameter says. Use notSelfLocalized for anything a reader sees.
     #[serde(rename = "notSelf")]
     pub not_self: String,
@@ -27792,6 +27821,15 @@ pub struct GenerateBodygraphResponseProfileKeynotes {
     #[serde(rename = "personalityLine")]
     pub personality_line: f64,
 }
+/// A reading of the whole bodygraph that connects type, authority, profile, definition and incarnation cross, written for this chart in English, German, Spanish, French, Hindi, Portuguese, Russian, Turkish.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct GenerateBodygraphResponseInterpretation {
+    /// The whole-chart reading in two paragraphs separated by a blank line: the shape of your definition and what drives your Throat, then your two Sun gates and the two Earth gates that complete your incarnation cross.
+    pub detailed: String,
+    /// The whole chart in two sentences: your type and inner authority as one decision rule, then the role your profile plays.
+    pub summary: String,
+}
 /// The incarnation cross built from the four cardinal gates and the profile angle.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -27804,13 +27842,16 @@ pub struct GenerateBodygraphResponseIncarnationCross {
     /// Cross angle name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "angleLocalized", skip_serializing_if = "Option::is_none")]
     pub angle_localized: Option<String>,
-    /// The life theme of the cross, synthesized from its four gates and the orientation the angle gives them. The same Sun gate under a different angle is a genuinely different theme: Right Angle is personal destiny, Left Angle is worked out through other people, Juxtaposition is a fixed fate.
+    /// The life theme of the cross, read from all four of its gates, the way its angle orients that theme, and the conscious Sun gate it leads with. The same Sun gate under a different angle is a different theme: Right Angle is lived through personal experience, Left Angle through other people, Juxtaposition on one fixed course.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     /// The four cardinal gates of the cross: Personality Sun, Personality Earth, Design Sun, Design Earth.
     pub gates: Vec<f64>,
-    /// Canonical published name of the incarnation cross, determined by the Personality Sun gate and the angle. All 192 crosses (64 Personality Sun gates times three angles) carry their published name, numbered variants included, so this is never a composed placeholder. Always begins with the angle followed by Cross of. Always English, whatever the lang parameter says.
+    /// Canonical published name of the incarnation cross, determined by the Personality Sun gate and the angle. All 192 crosses (64 Personality Sun gates times three angles) carry their published name, numbered variants included, so this is never a composed placeholder. Always begins with the angle followed by Cross of. Always English, whatever the lang parameter says. Use nameLocalized for anything a reader sees.
     pub name: String,
+    /// Incarnation cross name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
 }
 /// One entry of `gates`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27832,7 +27873,7 @@ pub struct GenerateBodygraphResponseGatesItem {
     pub iching_hexagram: GenerateBodygraphResponseGatesItemIchingHexagram,
     /// Line number from 1 to 6 within the gate, setting the line keynote and the profile.
     pub line: f64,
-    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone.
+    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone. When an earlier activation already sits on the same gate and line, this says so in one line instead of printing the meaning twice.
     #[serde(rename = "lineMeaning")]
     pub line_meaning: String,
     /// Activating body. One of Sun, Earth, Moon, North Node, South Node, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto. Always English, whatever the lang parameter says, so it stays safe to compare against in code and to key a glyph table on. Use planetLocalized for anything a reader sees.
@@ -27850,8 +27891,11 @@ pub struct GenerateBodygraphResponseGatesItem {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct GenerateBodygraphResponseGatesItemIchingHexagram {
-    /// English name of the corresponding I-Ching hexagram.
+    /// English name of the corresponding I-Ching hexagram. Always English, whatever the lang parameter says. Use nameLocalized for anything a reader sees.
     pub english: String,
+    /// Hexagram name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
     /// I-Ching hexagram number, identical to the gate number it corresponds to.
     pub number: f64,
 }
@@ -27869,7 +27913,7 @@ pub struct GenerateBodygraphResponseChannelsItem {
     /// Circuit family name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "circuitLocalized", skip_serializing_if = "Option::is_none")]
     pub circuit_localized: Option<String>,
-    /// What this channel wires between its two centers and the nature of the energy it carries.
+    /// What this channel wires between its two centers and how its energy shows up in you, in second person. Where the channel defines the center your inner authority comes from, or carries a motor to the Throat, the description says so.
     pub description: String,
     /// First gate of the channel.
     #[serde(rename = "gateA")]
@@ -27904,10 +27948,10 @@ pub struct GenerateBodygraphResponseCentersItem {
     /// Center name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
     pub name_localized: Option<String>,
-    /// The conditioning trap of this center when it is open. Returned on every center so a consumer can surface it the moment `defined` is false, which is where the not-self operates.
+    /// The question that exposes this center going off course. On an open center it is the not-self question of the conditioning it takes in from others; on a defined center it is the trap of its own fixed energy, never the open-center question.
     #[serde(rename = "notSelfQuestion")]
     pub not_self_question: String,
-    /// Theme text describing the center in its current defined or undefined state.
+    /// What this center does in this chart, in second person: how it works when defined, or what it takes in and learns when open. A defined Throat reads differently when a motor reaches it, which is what lets it act.
     pub theme: String,
 }
 /// Request body of `generateBodygraph`.
@@ -36017,7 +36061,7 @@ pub struct CalculateGatesResponsePersonalityItem {
     pub iching_hexagram: CalculateGatesResponsePersonalityItemIchingHexagram,
     /// Line number from 1 to 6 within the gate, setting the line keynote and the profile.
     pub line: f64,
-    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone.
+    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone. When an earlier activation already sits on the same gate and line, this says so in one line instead of printing the meaning twice.
     #[serde(rename = "lineMeaning")]
     pub line_meaning: String,
     /// Activating body. One of Sun, Earth, Moon, North Node, South Node, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto. Always English, whatever the lang parameter says, so it stays safe to compare against in code and to key a glyph table on. Use planetLocalized for anything a reader sees.
@@ -36035,8 +36079,11 @@ pub struct CalculateGatesResponsePersonalityItem {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct CalculateGatesResponsePersonalityItemIchingHexagram {
-    /// English name of the corresponding I-Ching hexagram.
+    /// English name of the corresponding I-Ching hexagram. Always English, whatever the lang parameter says. Use nameLocalized for anything a reader sees.
     pub english: String,
+    /// Hexagram name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
     /// I-Ching hexagram number, identical to the gate number it corresponds to.
     pub number: f64,
 }
@@ -36060,7 +36107,7 @@ pub struct CalculateGatesResponseDesignItem {
     pub iching_hexagram: CalculateGatesResponseDesignItemIchingHexagram,
     /// Line number from 1 to 6 within the gate, setting the line keynote and the profile.
     pub line: f64,
-    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone.
+    /// Meaning of this gate at this specific line, one of 384. The finest interpretive layer in the chart and the one that makes a reading specific rather than generic. This is not the six abstract line archetypes: gate 41 line 3 carries its own meaning that neither the gate keynote nor the line-3 archetype holds alone. When an earlier activation already sits on the same gate and line, this says so in one line instead of printing the meaning twice.
     #[serde(rename = "lineMeaning")]
     pub line_meaning: String,
     /// Activating body. One of Sun, Earth, Moon, North Node, South Node, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto. Always English, whatever the lang parameter says, so it stays safe to compare against in code and to key a glyph table on. Use planetLocalized for anything a reader sees.
@@ -36078,8 +36125,11 @@ pub struct CalculateGatesResponseDesignItem {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct CalculateGatesResponseDesignItemIchingHexagram {
-    /// English name of the corresponding I-Ching hexagram.
+    /// English name of the corresponding I-Ching hexagram. Always English, whatever the lang parameter says. Use nameLocalized for anything a reader sees.
     pub english: String,
+    /// Hexagram name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
+    #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
+    pub name_localized: Option<String>,
     /// I-Ching hexagram number, identical to the gate number it corresponds to.
     pub number: f64,
 }
@@ -37581,7 +37631,7 @@ pub struct CalculateChannelsResponseChannelsItem {
     /// Circuit family name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "circuitLocalized", skip_serializing_if = "Option::is_none")]
     pub circuit_localized: Option<String>,
-    /// What this channel wires between its two centers and the nature of the energy it carries.
+    /// What this channel wires between its two centers and how its energy shows up in you, in second person. Where the channel defines the center your inner authority comes from, or carries a motor to the Throat, the description says so.
     pub description: String,
     /// First gate of the channel.
     #[serde(rename = "gateA")]
@@ -37867,10 +37917,10 @@ pub struct CalculateCentersResponseCentersItem {
     /// Center name in the requested language, for display only. Present only when lang is set to a language other than English, since in English it would repeat its canonical partner field exactly. Never compare against this value, compare against the canonical field beside it.
     #[serde(rename = "nameLocalized", skip_serializing_if = "Option::is_none")]
     pub name_localized: Option<String>,
-    /// The conditioning trap of this center when it is open. Returned on every center so a consumer can surface it the moment `defined` is false, which is where the not-self operates.
+    /// The question that exposes this center going off course. On an open center it is the not-self question of the conditioning it takes in from others; on a defined center it is the trap of its own fixed energy, never the open-center question.
     #[serde(rename = "notSelfQuestion")]
     pub not_self_question: String,
-    /// Theme text describing the center in its current defined or undefined state.
+    /// What this center does in this chart, in second person: how it works when defined, or what it takes in and learns when open. A defined Throat reads differently when a motor reaches it, which is what lets it act.
     pub theme: String,
 }
 /// Request body of `calculateCenters`.
