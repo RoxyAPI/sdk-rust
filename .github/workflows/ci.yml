@@ -22,6 +22,14 @@ jobs:
           tool: cargo-deny@0.20.2
           fallback: none
       - run: ./scripts/check
+      - name: Report dependency advisories
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          status=0
+          cargo deny --locked check advisories || status=1
+          cargo deny --locked --manifest-path tools/generate/Cargo.toml check advisories || status=1
+          exit "$status"
 
   msrv:
     runs-on: ubuntu-latest

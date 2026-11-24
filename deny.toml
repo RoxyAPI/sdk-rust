@@ -1,4 +1,4 @@
-# Dependency policy for the published crate, checked by scripts/check.
+# Dependency policy for the published crate, checked by scripts/check; CI reports advisories.
 
 [graph]
 all-features = true

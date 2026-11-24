@@ -1,4 +1,4 @@
-# Dependency policy for the unpublished generator tool, checked by scripts/check.
+# Dependency policy for the unpublished generator tool, checked by scripts/check; CI reports advisories.
 
 [advisories]
 unmaintained = "all"

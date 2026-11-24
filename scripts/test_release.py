@@ -392,6 +392,13 @@ class ReleaseTests(unittest.TestCase):
         reconcile.assert_called_once_with("v1.1.2", "RoxyAPI/sdk-rust", "test", None)
         registry.assert_not_called()
 
+    def test_the_release_gate_reads_no_live_advisory_database(self):
+        gate = Path(__file__).with_name("check").read_text().splitlines()
+        policies = [line for line in gate if line.startswith("cargo deny")]
+        self.assertEqual(len(policies), 2)
+        for line in policies:
+            self.assertTrue(line.endswith(" check licenses bans sources"), line)
+
 
 if __name__ == "__main__":
     unittest.main()
