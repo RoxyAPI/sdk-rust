@@ -430,12 +430,15 @@ string_enum! {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct TransitsResponse {
+    /// The reading of the whole transit sky against the natal chart (only included when natalChart is provided in the request).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interpretation: Option<TransitsResponseInterpretation>,
     /// Transit aspect summary counts (only included when natalChart is provided). Quick overview of the current transit weather.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<TransitsResponseSummary>,
     /// Timezone offset from UTC in hours used for this calculation.
     pub timezone: f64,
-    /// Transit-to-natal aspects (only included when natalChart is provided in the request). Shows which transiting planets are aspecting natal planets.
+    /// Transit-to-natal aspects with a written reading each (only included when natalChart is provided in the request). Aspects under 15 percent strength are left out of the list, not out of the readings.
     #[serde(rename = "transitAspects", skip_serializing_if = "Option::is_none")]
     pub transit_aspects: Option<Vec<TransitsResponseTransitAspectsItem>>,
     /// Date of the transit calculation (YYYY-MM-DD).
@@ -480,7 +483,7 @@ pub struct TransitsResponseTransitPlanetsItem {
 pub struct TransitsResponseTransitAspectsItem {
     /// Exact angle of this aspect type in degrees.
     pub angle: f64,
-    /// Rich interpretation of the transit aspect including narrative summary, timing, impact assessment, practical guidance, and keywords.
+    /// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
     pub interpretation: TransitsResponseTransitAspectsItemInterpretation,
     /// Whether the transiting planet is moving toward exactitude (applying) or away from it (separating). Applying aspects grow stronger.
     #[serde(rename = "isApplying")]
@@ -509,19 +512,19 @@ pub struct TransitsResponseTransitAspectsItem {
     #[serde(rename = "typeLocalized", skip_serializing_if = "Option::is_none")]
     pub type_localized: Option<String>,
 }
-/// Rich interpretation of the transit aspect including narrative summary, timing, impact assessment, practical guidance, and keywords.
+/// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct TransitsResponseTransitAspectsItemInterpretation {
-    /// Practical advice for working with or navigating this transit energy.
+    /// Ways to work with this transit, offered as options and drawn from both bodies in the aspect.
     pub guidance: String,
-    /// Strength and nature of the transit impact on your natal chart.
+    /// What the transit stirs in the natal body and the life area where it plays out, from the natal house the transiting body passes through.
     pub impact: String,
-    /// Key themes activated by this transit aspect.
+    /// Themes of this transit, drawn from both bodies and the aspect.
     pub keywords: Vec<String>,
-    /// Narrative interpretation of what this transit aspect means and how it manifests.
+    /// The transit in brief: what the transiting body is doing to the natal body in this aspect, in plain words for this chart.
     pub summary: String,
-    /// How long this transit influence lasts, localized. The bucket follows the speed of the transiting body: a few hours for the Moon, a few days for the Sun, Mercury, Venus and Mars, one to two weeks for Jupiter, several weeks for Saturn, and an extended period for Uranus, Neptune and Pluto.
+    /// The dated window of this transit on the transit clock: when it enters orb, every exact pass and when it leaves. A fast body such as the Moon reads in hours of the day.
     pub timing: String,
 }
 /// Transit aspect summary counts (only included when natalChart is provided). Quick overview of the current transit weather.
@@ -537,6 +540,15 @@ pub struct TransitsResponseSummary {
     /// Total transit-to-natal aspects found.
     #[serde(rename = "totalAspects")]
     pub total_aspects: f64,
+}
+/// The reading of the whole transit sky against the natal chart (only included when natalChart is provided in the request).
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct TransitsResponseInterpretation {
+    /// The whole sky read as one piece in short paragraphs: the long season set by the slow bodies, the transits easing the way, the nearer ones and the Moon of the day, drawn from every aspect found.
+    pub detailed: String,
+    /// The leading transit of the moment in one or two sentences.
+    pub summary: String,
 }
 /// Request body of `calculateTransits`.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -23296,7 +23308,7 @@ pub struct GenerateTimelineResponseEventsItem {
     pub date: String,
     /// Exact instant of the event as an ISO-8601 UTC datetime, to the nearest second. Astronomical events are refined to this instant by search, not reported at a daily sample point; a dasha-change is the period boundary itself, counted from the birth instant.
     pub datetime: String,
-    /// Plain-language summary of the event, suitable for direct display. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
+    /// Plain-language reading of the event, suitable for direct display. A transit aspect, sign ingress or retrograde or direct station names the event and says what it stirs for this birth subject, in one or two sentences. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
     pub description: String,
     /// Forecast domain. western covers transit aspects, sign ingresses, retrograde stations, eclipses, and new and full moons. vedic covers Vimshottari mahadasha, antardasha, and pratyantardasha boundaries. biorhythm covers critical days. A stable machine value, never localized, so consumers can branch on it under any language.
     pub domain: GenerateTimelineResponseEventsItemDomain,
@@ -27123,7 +27135,7 @@ pub struct GenerateDigestResponseWindowsItemTopItem {
     pub date: String,
     /// Exact instant of the event as an ISO-8601 UTC datetime, to the nearest second. Astronomical events are refined to this instant by search, not reported at a daily sample point; a dasha-change is the period boundary itself, counted from the birth instant.
     pub datetime: String,
-    /// Plain-language summary of the event, suitable for direct display. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
+    /// Plain-language reading of the event, suitable for direct display. A transit aspect, sign ingress or retrograde or direct station names the event and says what it stirs for this birth subject, in one or two sentences. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
     pub description: String,
     /// Forecast domain. western covers transit aspects, sign ingresses, retrograde stations, eclipses, and new and full moons. vedic covers Vimshottari mahadasha, antardasha, and pratyantardasha boundaries. biorhythm covers critical days. A stable machine value, never localized, so consumers can branch on it under any language.
     pub domain: GenerateDigestResponseWindowsItemTopItemDomain,
@@ -28793,7 +28805,7 @@ pub struct ForecastTransitsResponseEventsItem {
     pub date: String,
     /// Exact instant of the event as an ISO-8601 UTC datetime, to the nearest second. Astronomical events are refined to this instant by search, not reported at a daily sample point; a dasha-change is the period boundary itself, counted from the birth instant.
     pub datetime: String,
-    /// Plain-language summary of the event, suitable for direct display. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
+    /// Plain-language reading of the event, suitable for direct display. A transit aspect, sign ingress or retrograde or direct station names the event and says what it stirs for this birth subject, in one or two sentences. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
     pub description: String,
     /// Forecast domain. western covers transit aspects, sign ingresses, retrograde stations, eclipses, and new and full moons. vedic covers Vimshottari mahadasha, antardasha, and pratyantardasha boundaries. biorhythm covers critical days. A stable machine value, never localized, so consumers can branch on it under any language.
     pub domain: ForecastTransitsResponseEventsItemDomain,
@@ -29385,7 +29397,7 @@ pub struct FindSignificantDatesResponseEventsItem {
     pub date: String,
     /// Exact instant of the event as an ISO-8601 UTC datetime, to the nearest second. Astronomical events are refined to this instant by search, not reported at a daily sample point; a dasha-change is the period boundary itself, counted from the birth instant.
     pub datetime: String,
-    /// Plain-language summary of the event, suitable for direct display. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
+    /// Plain-language reading of the event, suitable for direct display. A transit aspect, sign ingress or retrograde or direct station names the event and says what it stirs for this birth subject, in one or two sentences. The only localized field: when lang is set this sentence, and the body, target, and aspect names within it, render in the requested language while the structured fields stay English.
     pub description: String,
     /// Forecast domain. western covers transit aspects, sign ingresses, retrograde stations, eclipses, and new and full moons. vedic covers Vimshottari mahadasha, antardasha, and pratyantardasha boundaries. biorhythm covers critical days. A stable machine value, never localized, so consumers can branch on it under any language.
     pub domain: FindSignificantDatesResponseEventsItemDomain,
@@ -32210,13 +32222,15 @@ string_enum! {
 pub struct CalculateTransitAspectsResponse {
     /// The natal Ascendant (rising sign): the eastern horizon at birth, and the left-hand horizon a chart wheel is oriented to. Reported alongside the cusps because the two are not the same longitude in every house system: Whole Sign puts the first cusp at 0 degrees of the rising sign, which can sit most of a sign away from the Ascendant itself.
     pub ascendant: CalculateTransitAspectsResponseAscendant,
-    /// Transit-to-natal aspects with interpretations, strength ratings, and guidance. Each aspect represents a transiting planet forming a geometric angle to a natal planet.
+    /// Transit-to-natal aspects, each with a written reading, strength and orb. Each aspect is a transiting body forming a geometric angle to a natal body.
     pub aspects: Vec<CalculateTransitAspectsResponseAspectsItem>,
     /// House system actually used for the natal cusps behind every house number in this response. Differs from the requested system only above the polar circle, where quadrant systems fall back to Whole Sign.
     #[serde(rename = "houseSystem")]
     pub house_system: CalculateTransitAspectsResponseHouseSystem,
     /// The twelve NATAL house cusps that every house number in this response is read against, in the house system named by houseSystem. Same shape as the natal-chart houses array, so a bi-wheel can be drawn with real house sectors from this one response instead of pairing it with a second call.
     pub houses: Vec<CalculateTransitAspectsResponseHousesItem>,
+    /// The reading of the whole transit sky against this chart, from every aspect found, so planets, aspectTypes and minStrength never change it.
+    pub interpretation: CalculateTransitAspectsResponseInterpretation,
     /// Natal (birth chart) planetary positions used as the baseline for transit aspect comparison, each placed in its natal house.
     #[serde(rename = "natalPlanets")]
     pub natal_planets: Vec<CalculateTransitAspectsResponseNatalPlanetsItem>,
@@ -32319,7 +32333,7 @@ pub struct CalculateTransitAspectsResponseSummaryStrongest {
     pub planet2_localized: Option<String>,
     /// Aspect strength percentage (0-100). Based on orb tightness relative to the allowed maximum.
     pub strength: f64,
-    /// Rich interpretation of the transit aspect: narrative summary, timing, impact assessment, practical guidance, and keywords.
+    /// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
     #[serde(rename = "transitInterpretation")]
     pub transit_interpretation: CalculateTransitAspectsResponseSummaryStrongestTransitInterpretation,
     /// Aspect type. Major: conjunction (0), opposition (180), trine (120), square (90), sextile (60). Minor: semi-sextile, quincunx, semi-square, sesquiquadrate.
@@ -32342,19 +32356,19 @@ string_enum! {
         Sesquiquadrate = "SESQUIQUADRATE",
     }
 }
-/// Rich interpretation of the transit aspect: narrative summary, timing, impact assessment, practical guidance, and keywords.
+/// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct CalculateTransitAspectsResponseSummaryStrongestTransitInterpretation {
-    /// Practical advice for working with this transit energy.
+    /// Ways to work with this transit, offered as options and drawn from both bodies in the aspect.
     pub guidance: String,
-    /// Strength and nature of this transit effect: constructive, challenging, or neutral.
+    /// What the transit stirs in the natal body and the life area where it plays out, from the natal house the transiting body passes through.
     pub impact: String,
-    /// Key themes activated by this transit aspect.
+    /// Themes of this transit, drawn from both bodies and the aspect.
     pub keywords: Vec<String>,
-    /// Narrative interpretation of this transit aspect and its life impact.
+    /// The transit in brief: what the transiting body is doing to the natal body in this aspect, in plain words for this chart.
     pub summary: String,
-    /// When this transit is most active and how long its influence lasts, localized. The bucket follows the speed of the transiting body: a few hours for the Moon, a few days for the Sun, Mercury, Venus and Mars, one to two weeks for Jupiter, several weeks for Saturn, and an extended period for Uranus, Neptune and Pluto.
+    /// The dated window of this transit on the transit clock: when it enters orb, every exact pass and when it leaves. A fast body such as the Moon reads in hours of the day.
     pub timing: String,
 }
 string_enum! {
@@ -32458,6 +32472,15 @@ string_enum! {
         BlackMoonLilith = "Black Moon Lilith",
     }
 }
+/// The reading of the whole transit sky against this chart, from every aspect found, so planets, aspectTypes and minStrength never change it.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct CalculateTransitAspectsResponseInterpretation {
+    /// The whole sky read as one piece in short paragraphs: the long season set by the slow bodies, the transits easing the way, the nearer ones and the Moon of the day, drawn from every aspect before any filter applies.
+    pub detailed: String,
+    /// The leading transit of the moment in one or two sentences.
+    pub summary: String,
+}
 /// One entry of `houses`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
@@ -32508,7 +32531,7 @@ pub struct CalculateTransitAspectsResponseAspectsItem {
     pub planet2_localized: Option<String>,
     /// Aspect strength percentage (0-100). Based on orb tightness relative to the allowed maximum.
     pub strength: f64,
-    /// Rich interpretation of the transit aspect: narrative summary, timing, impact assessment, practical guidance, and keywords.
+    /// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
     #[serde(rename = "transitInterpretation")]
     pub transit_interpretation: CalculateTransitAspectsResponseAspectsItemTransitInterpretation,
     /// Aspect type. Major: conjunction (0), opposition (180), trine (120), square (90), sextile (60). Minor: semi-sextile, quincunx, semi-square, sesquiquadrate.
@@ -32531,19 +32554,19 @@ string_enum! {
         Sesquiquadrate = "SESQUIQUADRATE",
     }
 }
-/// Rich interpretation of the transit aspect: narrative summary, timing, impact assessment, practical guidance, and keywords.
+/// The reading of this transit aspect: summary, dated timing, impact, guidance and keywords, written for this chart.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct CalculateTransitAspectsResponseAspectsItemTransitInterpretation {
-    /// Practical advice for working with this transit energy.
+    /// Ways to work with this transit, offered as options and drawn from both bodies in the aspect.
     pub guidance: String,
-    /// Strength and nature of this transit effect: constructive, challenging, or neutral.
+    /// What the transit stirs in the natal body and the life area where it plays out, from the natal house the transiting body passes through.
     pub impact: String,
-    /// Key themes activated by this transit aspect.
+    /// Themes of this transit, drawn from both bodies and the aspect.
     pub keywords: Vec<String>,
-    /// Narrative interpretation of this transit aspect and its life impact.
+    /// The transit in brief: what the transiting body is doing to the natal body in this aspect, in plain words for this chart.
     pub summary: String,
-    /// When this transit is most active and how long its influence lasts, localized. The bucket follows the speed of the transiting body: a few hours for the Moon, a few days for the Sun, Mercury, Venus and Mars, one to two weeks for Jupiter, several weeks for Saturn, and an extended period for Uranus, Neptune and Pluto.
+    /// The dated window of this transit on the transit clock: when it enters orb, every exact pass and when it leaves. A fast body such as the Moon reads in hours of the day.
     pub timing: String,
 }
 string_enum! {
